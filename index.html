@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberDash: Neon Overdrive — Portal Oficial</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Orbitron & Rajdhani -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-pink: #ff007f;
+            --neon-yellow: #ffe600;
+            --bg-dark: #05050a;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .neon-text-cyan {
+            text-shadow: 0 0 12px rgba(0, 243, 255, 0.8), 0 0 28px rgba(0, 243, 255, 0.35);
+        }
+
+        .neon-text-pink {
+            text-shadow: 0 0 12px rgba(255, 0, 127, 0.8), 0 0 28px rgba(255, 0, 127, 0.35);
+        }
+
+        .neon-border-cyan {
+            border: 1px solid rgba(0, 243, 255, 0.45);
+            box-shadow: 0 0 22px rgba(0, 243, 255, 0.14), inset 0 0 12px rgba(0, 243, 255, 0.06);
+        }
+
+        .neon-border-pink {
+            border: 1px solid rgba(255, 0, 127, 0.45);
+            box-shadow: 0 0 22px rgba(255, 0, 127, 0.14), inset 0 0 12px rgba(255, 0, 127, 0.06);
+        }
+
+        .glass-panel {
+            background: rgba(10, 12, 24, 0.86);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .btn-cyber {
+            transition: all 0.15s ease;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+
+        .btn-cyber:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-cyber:active {
+            transform: scale(0.97);
+        }
+
+        .panel-cut {
+            clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #05050a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 243, 255, 0.4);
+        }
+    </style>
+</head>
+<body class="relative min-h-screen selection:bg-cyan-500 selection:text-black">
+
+    <!-- =========================================================================
+         CONFIGURACIÓN EN PRIMERA LÍNEA: LOGO, LANZAMIENTO, DESCARGAS Y SUPABASE
+         =========================================================================
+         SQL PARA CREAR LA TABLA CON ROW LEVEL SECURITY (RLS) EN SUPABASE.
+         ES EL MISMO esquema que usa el juego Godot (CyberDash/supabase_setup.sql).
+         Ejecutarlo UNA SOLA VEZ en Supabase -> SQL Editor. Ya está creada, así
+         que esta web solo consume la tabla; no hace falta volver a pegarlo.
+
+         create table if not exists public.player_profiles (
+             id uuid primary key references auth.users(id) on delete cascade,
+             username text not null default 'Piloto',
+             crystals integer not null default 200 check (crystals >= 0),
+             high_score integer not null default 0 check (high_score >= 0),
+             xp integer not null default 0 check (xp >= 0),
+             level integer not null default 1 check (level >= 1),
+             equipped_ship text not null default 'viper_cyan',
+             unlocked_ships jsonb not null default '["viper_cyan"]'::jsonb,
+             upgrades jsonb not null default '{"shieldDuration":1,"crystalMagnet":1,"weaponPower":1}'::jsonb,
+             updated_at timestamptz not null default now()
+         );
+
+         alter table public.player_profiles enable row level security;
+
+         create policy "Lectura publica del ranking global"
+             on public.player_profiles for select
+             using (true);
+
+         create policy "Usuarios insertan su propio perfil"
+             on public.player_profiles for insert
+             with check (auth.uid() = id);
+
+         create policy "Usuarios actualizan solo su propio perfil"
+             on public.player_profiles for update
+             using (auth.uid() = id)
+             with check (auth.uid() = id);
+         ========================================================================= -->
+    <script>
+        const SITE_ASSETS = {
+            // Introduce aquí la ruta o URL de tu logo propio (ej. "./assets/logo.png" o "./logo.svg")
+            LOGO_URL: ""
+        };
+
+        const LAUNCH_CONFIG = {
+            RELEASE_DATE: "2026-12-13T00:00:00",
+            LABEL_TEXT: "Domingo 13 de Diciembre de 2026",
+            PHASE_BADGE: "PRÓXIMO LANZAMIENTO OFICIAL • PC Y ANDROID"
+        };
+
+        const DOWNLOAD_LINKS = {
+            android_apk: "#descargas",
+            pc_linux: "#descargas",
+            pc_windows: "#descargas",
+            version: "LANZAMIENTO 13 DE DICIEMBRE • PC & ANDROID"
+        };
+
+        // Debe coincidir con CyberDash/supabase_config.json.
+        // Es la clave PUBLICA (anon/publishable): segura en el navegador. Nunca pongas service_role/secret.
+        const SUPABASE_CONFIG = {
+            URL: "https://vcebgixksktaucwfxovg.supabase.co",
+            ANON_KEY: "sb_publishable_ptMjHmn998NiN8gGEb7W6A_KZwktW3R"
+        };
+    </script>
+
+    <!-- Fondo Animado Cyberpunk en Canvas -->
+    <canvas id="bgCanvas" class="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-65"></canvas>
+
+    <!-- Notificación Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 pointer-events-none opacity-0 translate-y-4 transition-all duration-300">
+        <div id="toast-box" class="glass-panel neon-border-cyan px-4 py-3 rounded-xl flex items-center gap-3 shadow-2xl">
+            <i id="toast-icon" class="ph-fill ph-info text-cyan-400 text-xl"></i>
+            <span id="toast-msg" class="text-sm font-semibold text-white">Listo</span>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- 1. BARRA DE NAVEGACIÓN                                    -->
+    <!-- ========================================================= -->
+    <header class="sticky top-0 z-40 glass-panel border-b border-cyan-500/20">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+            <a href="#" class="flex items-center gap-3 min-w-0">
+                <div id="brand-logo-slot" class="w-9 h-9 rounded-lg bg-gradient-to-tr from-cyan-400 to-pink-500 flex items-center justify-center text-black font-orbitron font-black text-lg overflow-hidden shrink-0">
+                    C
+                </div>
+                <span class="font-orbitron font-black text-base sm:text-xl tracking-wider text-white truncate">
+                    CYBER<span class="text-pink-500">DASH</span>
+                </span>
+            </a>
+
+            <nav class="hidden lg:flex items-center gap-6 text-xs font-orbitron font-bold tracking-wider text-gray-300">
+                <a href="#lanzamiento" class="hover:text-pink-400 transition">LANZAMIENTO</a>
+                <a href="#hangar" class="hover:text-cyan-400 transition">NAVES Y MEJORAS</a>
+                <a href="#sectores" class="hover:text-cyan-400 transition">SECTORES Y JEFE</a>
+                <a href="#descargas" class="hover:text-yellow-300 transition">DESCARGAS</a>
+                <a href="#ranking" class="hover:text-cyan-400 transition">RANKING GLOBAL</a>
+            </nav>
+
+            <div class="flex items-center gap-2.5 shrink-0">
+                <button id="btn-nav-auth" type="button" class="btn-cyber px-3.5 sm:px-4 py-2 glass-panel neon-border-cyan text-cyan-300 font-orbitron text-xs font-bold tracking-wider flex items-center gap-2">
+                    <i class="ph-bold ph-user-circle text-base"></i>
+                    <span id="nav-user-label">ACCESO PILOTO</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ========================================================= -->
+    <!-- MAIN CONTENT                                              -->
+    <!-- ========================================================= -->
+    <main class="relative z-10">
+
+        <!-- ===================================================== -->
+        <!-- 2. HERO SECTION + CUENTA ATRÁS EN VIVO                 -->
+        <!-- ===================================================== -->
+        <section id="lanzamiento" class="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-20 sm:pt-16 sm:pb-24 text-center flex flex-col items-center">
+            <!-- Slot opcional para logo propio -->
+            <div id="hero-logo-container" class="hidden mb-5">
+                <img id="hero-custom-logo" src="" alt="Logo CyberDash: Neon Overdrive" class="h-20 sm:h-24 w-auto object-contain mx-auto drop-shadow-[0_0_22px_rgba(0,243,255,0.45)]">
+            </div>
+
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-500/20 border border-pink-400/50 text-pink-300 text-xs font-orbitron font-bold uppercase tracking-widest mb-5">
+                <i class="ph-fill ph-rocket-launch"></i>
+                <span id="phase-badge-text">PRÓXIMO LANZAMIENTO OFICIAL • PC Y ANDROID</span>
+            </div>
+
+            <h1 class="font-orbitron text-4xl sm:text-6xl md:text-7xl font-black tracking-wider text-white neon-text-cyan leading-tight">
+                CYBER<span class="text-pink-500 neon-text-pink">DASH</span>
+            </h1>
+            <p class="font-orbitron text-base sm:text-xl tracking-[0.35em] text-cyan-300 font-bold mt-2 mb-5">
+                NEON OVERDRIVE
+            </p>
+
+            <p class="max-w-2xl text-gray-300 text-base sm:text-lg leading-relaxed mb-8">
+                Domina una autopista cibernética de <span class="text-cyan-300 font-bold">5 carriles</span> a máxima velocidad. Esquiva obstáculos de neón, desbloquea las <span class="text-pink-400 font-bold">5 naves</span>, potencia tu arsenal y desafía al <span class="text-yellow-300 font-bold">Acorazado Omega</span> con guardado en la nube para PC y Android.
+            </p>
+
+            <!-- Cuenta atrás en tiempo real -->
+            <div class="glass-panel neon-border-pink panel-cut p-6 sm:p-8 w-full max-w-2xl mb-9">
+                <div class="text-xs font-orbitron font-bold tracking-widest text-pink-400 uppercase mb-1">
+                    ESTRENO OFICIAL PROGRAMADO
+                </div>
+                <div id="release-date-label" class="font-orbitron text-sm sm:text-base font-bold text-cyan-300 mb-5">
+                    Domingo 13 de Diciembre de 2026
+                </div>
+
+                <div class="grid grid-cols-4 gap-2.5 sm:gap-4">
+                    <div class="bg-black/65 border border-cyan-500/30 rounded-2xl py-3.5 sm:py-5 px-2">
+                        <div id="cd-days" class="font-orbitron text-2xl sm:text-4xl font-black text-white neon-text-cyan">00</div>
+                        <div class="text-[10px] sm:text-xs font-orbitron uppercase tracking-wider text-cyan-400 mt-1">Días</div>
+                    </div>
+                    <div class="bg-black/65 border border-cyan-500/30 rounded-2xl py-3.5 sm:py-5 px-2">
+                        <div id="cd-hours" class="font-orbitron text-2xl sm:text-4xl font-black text-white neon-text-cyan">00</div>
+                        <div class="text-[10px] sm:text-xs font-orbitron uppercase tracking-wider text-cyan-400 mt-1">Horas</div>
+                    </div>
+                    <div class="bg-black/65 border border-pink-500/30 rounded-2xl py-3.5 sm:py-5 px-2">
+                        <div id="cd-minutes" class="font-orbitron text-2xl sm:text-4xl font-black text-white neon-text-pink">00</div>
+                        <div class="text-[10px] sm:text-xs font-orbitron uppercase tracking-wider text-pink-400 mt-1">Minutos</div>
+                    </div>
+                    <div class="bg-black/65 border border-pink-500/30 rounded-2xl py-3.5 sm:py-5 px-2">
+                        <div id="cd-seconds" class="font-orbitron text-2xl sm:text-4xl font-black text-white neon-text-pink">00</div>
+                        <div class="text-[10px] sm:text-xs font-orbitron uppercase tracking-wider text-pink-400 mt-1">Segundos</div>
+                    </div>
+                </div>
+
+                <div id="countdown-live-banner" class="hidden mt-4 py-2.5 px-4 rounded-xl bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 font-orbitron text-xs font-bold">
+                    ¡CYBERDASH: NEON OVERDRIVE YA ESTÁ DISPONIBLE!
+                </div>
+            </div>
+
+            <!-- Botones principales -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-xl">
+                <button id="btn-hero-auth" type="button" class="btn-cyber w-full sm:w-auto flex-1 py-4 px-7 bg-gradient-to-r from-cyan-500 via-blue-500 to-pink-600 text-white font-orbitron font-black text-xs sm:text-sm tracking-widest shadow-[0_0_30px_rgba(0,243,255,0.35)] flex items-center justify-center gap-2.5">
+                    <i class="ph-fill ph-user-plus text-xl"></i> RESERVAR ALIAS DE PILOTO
+                </button>
+                <a href="#hangar" class="btn-cyber w-full sm:w-auto py-4 px-6 glass-panel neon-border-cyan text-cyan-300 font-orbitron font-bold text-xs sm:text-sm tracking-wider flex items-center justify-center gap-2">
+                    <i class="ph-fill ph-airplane-tilt text-lg"></i> EXPLORAR NAVES
+                </a>
+            </div>
+
+            <!-- 4 Tarjetas de métricas destacadas -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full max-w-4xl mt-14">
+                <div class="glass-panel neon-border-cyan p-4 rounded-2xl">
+                    <div class="font-orbitron text-2xl sm:text-3xl font-black text-cyan-400">5</div>
+                    <div class="text-xs uppercase tracking-wider text-gray-400 font-bold mt-1">Carriles</div>
+                </div>
+                <div class="glass-panel neon-border-pink p-4 rounded-2xl">
+                    <div class="font-orbitron text-2xl sm:text-3xl font-black text-pink-400">5</div>
+                    <div class="text-xs uppercase tracking-wider text-gray-400 font-bold mt-1">Naves</div>
+                </div>
+                <div class="glass-panel border border-yellow-400/40 p-4 rounded-2xl">
+                    <div class="font-orbitron text-2xl sm:text-3xl font-black text-yellow-300">4</div>
+                    <div class="text-xs uppercase tracking-wider text-gray-400 font-bold mt-1">Biomas</div>
+                </div>
+                <div class="glass-panel border border-purple-500/40 p-4 rounded-2xl">
+                    <div class="font-orbitron text-lg sm:text-2xl font-black text-purple-400">CROSS-SAVE</div>
+                    <div class="text-xs uppercase tracking-wider text-gray-400 font-bold mt-1">PC + Android</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- 3. HANGAR INTERACTIVO DE 5 NAVES Y 3 MEJORAS          -->
+        <!-- ===================================================== -->
+        <section id="hangar" class="max-w-6xl mx-auto px-4 sm:px-6 py-16 border-t border-white/10">
+            <div class="text-center mb-10">
+                <span class="text-xs font-orbitron font-bold tracking-widest text-cyan-400 uppercase">Flota Estelar</span>
+                <h2 class="font-orbitron text-3xl sm:text-4xl font-black text-white mt-1">NAVES Y MEJORAS</h2>
+                <p class="text-sm text-gray-400 mt-2">Haz clic en cualquier nave para revisar su telemetría de velocidad, manejo y potencia de fuego</p>
+            </div>
+
+            <!-- Grid de 5 Naves -->
+            <div id="ships-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                <!-- Generado por JS -->
+            </div>
+
+            <!-- Tarjeta de Telemetría de Nave Seleccionada -->
+            <div id="ship-inspector" class="glass-panel neon-border-cyan panel-cut p-5 sm:p-6 mb-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                <div class="flex items-center gap-4">
+                    <div id="inspector-icon-box" class="w-16 h-16 rounded-2xl bg-cyan-500/15 border border-cyan-400/40 flex items-center justify-center shrink-0">
+                        <i id="inspector-icon" class="ph-fill ph-airplane-tilt text-3xl text-cyan-400"></i>
+                    </div>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2.5">
+                            <h3 id="inspector-name" class="font-orbitron text-xl font-black text-white">Viper MK-I</h3>
+                            <span id="inspector-role" class="px-2.5 py-0.5 rounded bg-cyan-500/15 border border-cyan-400/30 font-orbitron text-[11px] font-bold text-cyan-300">INTERCEPTOR EQUILIBRADO</span>
+                            <span id="inspector-price" class="px-2.5 py-0.5 rounded bg-black/70 border border-white/15 font-orbitron text-xs font-bold text-cyan-300">GRATIS</span>
+                        </div>
+                        <p id="inspector-desc" class="text-sm text-gray-300 mt-1.5">Interceptor equilibrado estándar con respuesta ágil entre carriles.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 w-full lg:w-auto lg:min-w-[360px]">
+                    <div>
+                        <div class="flex justify-between text-[11px] font-orbitron text-gray-400 mb-1">
+                            <span>VELOCIDAD</span>
+                            <span id="stat-speed-val" class="text-cyan-300">80%</span>
+                        </div>
+                        <div class="h-2 rounded-full bg-black/80 overflow-hidden border border-white/10">
+                            <div id="stat-speed-bar" class="h-full bg-cyan-400 transition-all duration-300" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] font-orbitron text-gray-400 mb-1">
+                            <span>MANEJO</span>
+                            <span id="stat-handling-val" class="text-pink-400">84%</span>
+                        </div>
+                        <div class="h-2 rounded-full bg-black/80 overflow-hidden border border-white/10">
+                            <div id="stat-handling-bar" class="h-full bg-pink-500 transition-all duration-300" style="width: 84%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] font-orbitron text-gray-400 mb-1">
+                            <span>POTENCIA</span>
+                            <span id="stat-fire-val" class="text-yellow-300">75%</span>
+                        </div>
+                        <div class="h-2 rounded-full bg-black/80 overflow-hidden border border-white/10">
+                            <div id="stat-fire-bar" class="h-full bg-yellow-400 transition-all duration-300" style="width: 75%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3 Mejoras Permanentes -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="glass-panel border border-cyan-500/30 p-5 rounded-2xl flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 shrink-0">
+                        <i class="ph-fill ph-shield-plus text-2xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-orbitron font-bold text-sm text-white">Generador de Escudo</h4>
+                        <p class="text-xs text-gray-400 mt-1">Prolonga la duración del campo protector para absorber impactos frontales y haces de energía.</p>
+                    </div>
+                </div>
+
+                <div class="glass-panel border border-yellow-400/30 p-5 rounded-2xl flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-yellow-400/20 flex items-center justify-center text-yellow-300 shrink-0">
+                        <i class="ph-fill ph-magnet text-2xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-orbitron font-bold text-sm text-white">Imán Cuántico</h4>
+                        <p class="text-xs text-gray-400 mt-1">Atrae cristales de carriles adyacentes sin perder velocidad ni desviar tu trazada.</p>
+                    </div>
+                </div>
+
+                <div class="glass-panel border border-pink-500/30 p-5 rounded-2xl flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-pink-500/20 flex items-center justify-center text-pink-400 shrink-0">
+                        <i class="ph-fill ph-lightning text-2xl"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-orbitron font-bold text-sm text-white">Cañón Doble Plasma</h4>
+                        <p class="text-xs text-gray-400 mt-1">Potencia los disparos frontales para abrir paso entre defensas y enfrentar al jefe.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- 4. 4 BIOMAS DINÁMICOS Y FICHA DEL ACORAZADO OMEGA     -->
+        <!-- ===================================================== -->
+        <section id="sectores" class="max-w-6xl mx-auto px-4 sm:px-6 py-16 border-t border-white/10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                <!-- Selector y tarjetas de los 4 Biomas -->
+                <div>
+                    <span class="text-xs font-orbitron font-bold tracking-widest text-purple-400 uppercase">Progresión en Autopista</span>
+                    <h2 class="font-orbitron text-3xl font-black text-white mt-1 mb-4">SECTORES Y JEFE</h2>
+                    <p class="text-sm text-gray-300 mb-5">Selecciona un sector para inspeccionar su iluminación, rango de distancia y ritmo de ruta:</p>
+
+                    <div id="biomes-list" class="space-y-3 mb-4">
+                        <!-- Generado por JS -->
+                    </div>
+
+                    <div id="biome-spotlight" class="glass-panel border border-cyan-400/35 rounded-2xl p-4 text-xs text-gray-300 flex items-center justify-between gap-4">
+                        <div>
+                            <span class="font-orbitron font-bold text-cyan-300 uppercase">Sector activo seleccionado: </span>
+                            <span id="biome-spotlight-text">01. Sector Cian — Autopista urbana iluminada en cian con lectura clara de los 5 carriles.</span>
+                        </div>
+                        <span id="biome-spotlight-range" class="font-orbitron font-bold text-pink-400 shrink-0">0m – 1,000m</span>
+                    </div>
+                </div>
+
+                <!-- Ficha Jefe: Acorazado Omega -->
+                <div class="glass-panel neon-border-pink panel-cut p-7 relative overflow-hidden">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/20 border border-pink-500/40 text-pink-400 font-orbitron text-xs font-bold mb-4">
+                        <i class="ph-fill ph-warning"></i> JEFE DE INCURSIÓN • APARICIÓN ESPACIADA
+                    </div>
+                    <h3 class="font-orbitron text-2xl sm:text-3xl font-black text-white neon-text-pink mb-3">
+                        ACORAZADO OMEGA
+                    </h3>
+                    <p class="text-sm text-gray-300 leading-relaxed mb-5">
+                        Aparece de forma espaciada durante recorridos largos (primer encuentro a los <span class="text-cyan-300 font-bold">2,500m</span> y los siguientes cada <span class="text-pink-400 font-bold">+3,000m</span> adicionales por jefe derrotado) para mantener un ritmo fluido y emocionante.
+                    </p>
+
+                    <div class="space-y-3 mb-6">
+                        <div class="bg-black/55 border border-pink-500/30 p-3.5 rounded-xl flex items-start gap-3">
+                            <i class="ph-fill ph-fire-simple text-pink-500 text-xl mt-0.5 shrink-0"></i>
+                            <div>
+                                <div class="font-orbitron font-bold text-xs text-white">Ráfagas de Plasma Dirigidas</div>
+                                <div class="text-xs text-gray-400">Lanza salvas de plasma sobre carriles específicos exigiendo cambios de carril precisos.</div>
+                            </div>
+                        </div>
+                        <div class="bg-black/55 border border-yellow-400/30 p-3.5 rounded-xl flex items-start gap-3">
+                            <i class="ph-fill ph-sun text-yellow-400 text-xl mt-0.5 shrink-0"></i>
+                            <div>
+                                <div class="font-orbitron font-bold text-xs text-white">Rayo Láser Pesado con Aviso</div>
+                                <div class="text-xs text-gray-400">Proyecta una señal de advertencia previa antes de disparar un haz cargado de alta energía.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-orbitron border-t border-white/10 pt-4">
+                        <span class="text-gray-400">RECOMPENSA POR VICTORIA:</span>
+                        <span class="text-yellow-300 font-bold">+3,500 PTS & +35 CRISTALES</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- 5. DESCARGAS Y CONTROLES (MÓVIL Y PC)                 -->
+        <!-- ===================================================== -->
+        <section id="descargas" class="max-w-6xl mx-auto px-4 sm:px-6 py-16 border-t border-white/10">
+            <div class="text-center mb-10">
+                <span class="text-xs font-orbitron font-bold tracking-widest text-yellow-400 uppercase">Estreno Domingo 13 de Diciembre</span>
+                <h2 class="font-orbitron text-3xl sm:text-4xl font-black text-white mt-1">DESCARGAS Y CONTROLES</h2>
+                <p id="build-version-label" class="text-sm text-cyan-400 font-orbitron mt-2">LANZAMIENTO 13 DE DICIEMBRE • PC & ANDROID</p>
+            </div>
+
+            <!-- Tarjetas de Plataformas -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="glass-panel neon-border-cyan rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300 mb-4">
+                            <i class="ph-fill ph-android-logo text-3xl"></i>
+                        </div>
+                        <h3 class="font-orbitron text-xl font-bold text-white">Android (APK)</h3>
+                        <p class="text-sm text-gray-400 mt-2">Pensado para control táctil directo, respuesta inmediata en 5 carriles y guardado sincronizado en la nube.</p>
+                    </div>
+                    <a id="link-android" href="#descargas" class="btn-cyber mt-6 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-orbitron font-bold text-xs tracking-wider text-center flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-calendar-check text-base"></i> DISPONIBLE EL 13 DIC
+                    </a>
+                </div>
+
+                <div class="glass-panel neon-border-pink rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-pink-500/20 border border-pink-400/40 flex items-center justify-center text-pink-400 mb-4">
+                            <i class="ph-fill ph-linux-logo text-3xl"></i>
+                        </div>
+                        <h3 class="font-orbitron text-xl font-bold text-white">PC Linux</h3>
+                        <p class="text-sm text-gray-400 mt-2">Ejecución fluida en escritorio con atajos rápidos de teclado y acceso completo al hangar y ranking global.</p>
+                    </div>
+                    <a id="link-linux" href="#descargas" class="btn-cyber mt-6 py-3.5 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-orbitron font-bold text-xs tracking-wider text-center flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-calendar-check text-base"></i> DISPONIBLE EL 13 DIC
+                    </a>
+                </div>
+
+                <div class="glass-panel border border-yellow-400/40 rounded-2xl p-6 flex flex-col justify-between">
+                    <div>
+                        <div class="w-12 h-12 rounded-xl bg-yellow-500/20 border border-yellow-400/40 flex items-center justify-center text-yellow-300 mb-4">
+                            <i class="ph-fill ph-windows-logo text-3xl"></i>
+                        </div>
+                        <h3 class="font-orbitron text-xl font-bold text-white">PC Windows</h3>
+                        <p class="text-sm text-gray-400 mt-2">Experiencia panorámica en PC con sincronización automática de cristales, naves y récords con tu perfil móvil.</p>
+                    </div>
+                    <a id="link-windows" href="#descargas" class="btn-cyber mt-6 py-3.5 bg-gradient-to-r from-yellow-400 to-amber-500 text-black font-orbitron font-black text-xs tracking-wider text-center flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-calendar-check text-base"></i> DISPONIBLE EL 13 DIC
+                    </a>
+                </div>
+            </div>
+
+            <!-- Guía de Controles (Móvil y PC) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-panel border border-cyan-500/30 rounded-2xl p-6">
+                    <h4 class="font-orbitron text-base font-bold text-cyan-300 flex items-center gap-2 mb-3">
+                        <i class="ph-fill ph-device-mobile text-xl"></i> Controles en Móvil (Touch / Swipe)
+                    </h4>
+                    <ul class="space-y-2 text-sm text-gray-300">
+                        <li>• <span class="text-white font-bold">Deslizar / Tocar izquierda o derecha:</span> Cambia entre los 5 carriles de la autopista.</li>
+                        <li>• <span class="text-white font-bold">Acciones en pantalla:</span> Activa impulso, disparo o defensa según la situación de carrera.</li>
+                    </ul>
+                </div>
+
+                <div class="glass-panel border border-pink-500/30 rounded-2xl p-6">
+                    <h4 class="font-orbitron text-base font-bold text-pink-400 flex items-center gap-2 mb-3">
+                        <i class="ph-fill ph-keyboard text-xl"></i> Controles en PC (Teclado)
+                    </h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center text-xs font-orbitron">
+                        <div class="bg-black/60 border border-white/10 rounded-xl p-3">
+                            <div class="text-cyan-300 font-black text-sm">A / D</div>
+                            <div class="text-gray-400 mt-1">Carriles</div>
+                        </div>
+                        <div class="bg-black/60 border border-white/10 rounded-xl p-3">
+                            <div class="text-pink-400 font-black text-sm">SPACE</div>
+                            <div class="text-gray-400 mt-1">Disparo / Acción</div>
+                        </div>
+                        <div class="bg-black/60 border border-white/10 rounded-xl p-3">
+                            <div class="text-yellow-300 font-black text-sm">SHIFT</div>
+                            <div class="text-gray-400 mt-1">Overdrive</div>
+                        </div>
+                        <div class="bg-black/60 border border-white/10 rounded-xl p-3">
+                            <div class="text-purple-400 font-black text-sm">P</div>
+                            <div class="text-gray-400 mt-1">Pausa</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- 6. RANKING GLOBAL EN TIEMPO REAL (SUPABASE)            -->
+        <!-- ===================================================== -->
+        <section id="ranking" class="max-w-4xl mx-auto px-4 sm:px-6 py-16 border-t border-white/10">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+                <div>
+                    <span class="text-xs font-orbitron font-bold tracking-widest text-yellow-400 uppercase">Clasificación Mundial</span>
+                    <h2 class="font-orbitron text-3xl font-black text-white mt-1">TOP PILOTOS GLOBAL</h2>
+                </div>
+                <button id="btn-refresh-lb" type="button" class="btn-cyber px-4 py-2.5 glass-panel neon-border-cyan text-cyan-300 font-orbitron text-xs font-bold flex items-center gap-2 self-start">
+                    <i class="ph-bold ph-arrows-clockwise"></i> ACTUALIZAR
+                </button>
+            </div>
+
+            <div class="glass-panel neon-border-cyan rounded-2xl p-4 sm:p-6">
+                <div id="leaderboard-container" class="space-y-2.5">
+                    <div class="text-center text-cyan-400 py-10 font-orbitron text-sm animate-pulse">
+                        Conectando con la base de datos global...
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ========================================================= -->
+    <!-- FOOTER                                                    -->
+    <!-- ========================================================= -->
+    <footer class="relative z-10 border-t border-white/10 glass-panel py-8 mt-12">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-400">
+            <div class="font-orbitron font-bold text-white">
+                CYBER<span class="text-pink-500">DASH</span>: NEON OVERDRIVE
+            </div>
+            <div>
+                Lanzamiento oficial: Domingo 13 de Diciembre de 2026 • Sincronizado con Supabase
+            </div>
+        </div>
+    </footer>
+
+    <!-- ========================================================= -->
+    <!-- MODAL DE CUENTA DE PILOTO (SUPABASE AUTH)                 -->
+    <!-- ========================================================= -->
+    <div id="auth-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="glass-panel neon-border-cyan rounded-3xl w-full max-w-md p-6 sm:p-8 relative">
+            <button id="btn-close-auth" type="button" aria-label="Cerrar modal" class="absolute top-5 right-5 p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition">
+                <i class="ph-bold ph-x text-lg"></i>
+            </button>
+
+            <h3 class="font-orbitron text-xl font-black text-cyan-400 flex items-center gap-2 mb-1">
+                <i class="ph-fill ph-identification-card"></i> CUENTA DE PILOTO
+            </h3>
+            <p class="text-xs text-gray-400 mb-6">Reserva tu alias para el 13 de diciembre y sincroniza tu progreso en la nube</p>
+
+            <!-- Vista Usuario Conectado -->
+            <div id="modal-logged-in" class="hidden space-y-4">
+                <div class="bg-black/60 border border-cyan-500/30 p-4 rounded-2xl">
+                    <div class="text-xs text-gray-400">Piloto Conectado:</div>
+                    <div id="modal-username" class="font-orbitron text-lg font-bold text-white mt-0.5">Piloto</div>
+                    <div id="modal-email" class="text-xs text-cyan-400 mt-0.5">piloto@cyberdash.io</div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2.5 text-center">
+                    <div class="bg-black/50 p-3 rounded-xl border border-white/10">
+                        <div class="text-[10px] text-gray-400 uppercase">Récord</div>
+                        <div id="modal-highscore" class="font-orbitron font-bold text-sm text-cyan-300 mt-0.5">0</div>
+                    </div>
+                    <div class="bg-black/50 p-3 rounded-xl border border-white/10">
+                        <div class="text-[10px] text-gray-400 uppercase">Cristales</div>
+                        <div id="modal-crystals" class="font-orbitron font-bold text-sm text-yellow-300 mt-0.5">0</div>
+                    </div>
+                    <div class="bg-black/50 p-3 rounded-xl border border-white/10">
+                        <div class="text-[10px] text-gray-400 uppercase">Nivel</div>
+                        <div id="modal-level" class="font-orbitron font-bold text-sm text-pink-400 mt-0.5">1</div>
+                    </div>
+                </div>
+
+                <button id="btn-logout" type="button" class="w-full py-3 rounded-xl border border-pink-500/50 text-pink-400 font-orbitron text-xs font-bold hover:bg-pink-500/10 transition">
+                    CERRAR SESIÓN
+                </button>
+            </div>
+
+            <!-- Vista Formularios Login / Registro -->
+            <div id="modal-auth-forms">
+                <div class="flex rounded-xl bg-black/60 p-1 border border-white/10 mb-5">
+                    <button id="tab-login" type="button" class="flex-1 py-2 rounded-lg font-orbitron text-xs font-bold bg-cyan-500 text-black transition">INICIAR SESIÓN</button>
+                    <button id="tab-register" type="button" class="flex-1 py-2 rounded-lg font-orbitron text-xs font-bold text-gray-400 transition">REGISTRARSE</button>
+                </div>
+
+                <form id="auth-form" class="space-y-3.5">
+                    <div id="group-username" class="hidden">
+                        <label class="text-xs font-bold uppercase text-cyan-300 block mb-1">Alias de Piloto</label>
+                        <input type="text" id="input-username" maxlength="16" placeholder="Ej. CyberAce99" class="w-full px-4 py-2.5 rounded-xl bg-black/70 border border-cyan-500/40 text-white text-sm focus:outline-none focus:border-cyan-400">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold uppercase text-cyan-300 block mb-1">Correo Electrónico</label>
+                        <input type="email" id="input-email" required placeholder="piloto@cyberdash.io" class="w-full px-4 py-2.5 rounded-xl bg-black/70 border border-cyan-500/40 text-white text-sm focus:outline-none focus:border-cyan-400">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold uppercase text-cyan-300 block mb-1">Contraseña</label>
+                        <input type="password" id="input-password" required minlength="6" placeholder="••••••••" class="w-full px-4 py-2.5 rounded-xl bg-black/70 border border-cyan-500/40 text-white text-sm focus:outline-none focus:border-cyan-400">
+                    </div>
+                    <button type="submit" id="btn-submit-auth" class="btn-cyber w-full py-3.5 mt-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-orbitron font-bold text-xs tracking-wider">
+                        ENTRAR AL SISTEMA
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================================
+        // 1. LOGO PROPIO, ENLACES Y CUENTA ATRÁS HACIA EL 13 DE DICIEMBRE DE 2026
+        // =========================================================================
+        (function applyLogoIfProvided() {
+            const cleanUrl = String(SITE_ASSETS.LOGO_URL || '').trim();
+            if (!cleanUrl) return;
+
+            const heroContainer = document.getElementById('hero-logo-container');
+            const heroImg = document.getElementById('hero-custom-logo');
+            const brandSlot = document.getElementById('brand-logo-slot');
+
+            heroImg.src = cleanUrl;
+            heroImg.onerror = () => {
+                heroContainer.classList.add('hidden');
+            };
+            heroContainer.classList.remove('hidden');
+
+            const navImg = document.createElement('img');
+            navImg.src = cleanUrl;
+            navImg.alt = 'Logo';
+            navImg.className = 'w-full h-full object-contain p-0.5';
+            navImg.onerror = () => {
+                brandSlot.textContent = 'C';
+            };
+            brandSlot.innerHTML = '';
+            brandSlot.className = 'w-9 h-9 rounded-lg bg-black/70 border border-cyan-400/50 flex items-center justify-center overflow-hidden shrink-0';
+            brandSlot.appendChild(navImg);
+        })();
+
+        document.getElementById('link-android').href = DOWNLOAD_LINKS.android_apk;
+        document.getElementById('link-linux').href = DOWNLOAD_LINKS.pc_linux;
+        document.getElementById('link-windows').href = DOWNLOAD_LINKS.pc_windows;
+        document.getElementById('build-version-label').textContent = DOWNLOAD_LINKS.version;
+        document.getElementById('release-date-label').textContent = LAUNCH_CONFIG.LABEL_TEXT;
+        document.getElementById('phase-badge-text').textContent = LAUNCH_CONFIG.PHASE_BADGE;
+
+        const targetTimestamp = new Date(LAUNCH_CONFIG.RELEASE_DATE).getTime();
+
+        function updateCountdown() {
+            const diff = targetTimestamp - Date.now();
+            if (Number.isNaN(targetTimestamp) || diff <= 0) {
+                document.getElementById('cd-days').textContent = '00';
+                document.getElementById('cd-hours').textContent = '00';
+                document.getElementById('cd-minutes').textContent = '00';
+                document.getElementById('cd-seconds').textContent = '00';
+                document.getElementById('countdown-live-banner').classList.remove('hidden');
+                return;
+            }
+
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((diff / (1000 * 60)) % 60);
+            const seconds = Math.floor((diff / 1000) % 60);
+
+            document.getElementById('cd-days').textContent = String(days).padStart(2, '0');
+            document.getElementById('cd-hours').textContent = String(hours).padStart(2, '0');
+            document.getElementById('cd-minutes').textContent = String(minutes).padStart(2, '0');
+            document.getElementById('cd-seconds').textContent = String(seconds).padStart(2, '0');
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        // =========================================================================
+        // 2. INICIALIZACIÓN SEGURA DE SUPABASE Y NOTIFICACIONES
+        // =========================================================================
+        let supabaseClient = null;
+        let currentUser = null;
+        const isSupabaseConfigured =
+            /^https:\/\//.test(SUPABASE_CONFIG.URL) &&
+            !SUPABASE_CONFIG.URL.includes("TU-PROYECTO") &&
+            !SUPABASE_CONFIG.URL.includes("TU_SUPABASE_URL") &&
+            !/^(TU[_-]|TU-CLAVE)/i.test(SUPABASE_CONFIG.ANON_KEY) &&
+            SUPABASE_CONFIG.ANON_KEY.length > 20;
+
+        if (isSupabaseConfigured && window.supabase) {
+            try {
+                supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.URL, SUPABASE_CONFIG.ANON_KEY, {
+                    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+                });
+            } catch (err) {
+                console.error("Error al inicializar Supabase:", err);
+            }
+        } else {
+            console.warn("Supabase no configurado: la web funciona en modo local (ranking desactivado).");
+        }
+
+        function sanitizeUsername(name) {
+            return String(name || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 16);
+        }
+
+        // Crea el perfil solo si no existe, para no sobrescribir puntos ni cristales.
+        async function ensureProfile(user, preferredUsername) {
+            if (!supabaseClient || !user) return;
+            const { data: existing } = await supabaseClient
+                .from('player_profiles')
+                .select('id')
+                .eq('id', user.id)
+                .maybeSingle();
+            if (existing) return;
+
+            const fallback = (user.email || 'Piloto').split('@')[0];
+            const username = sanitizeUsername(preferredUsername).length >= 3
+                ? sanitizeUsername(preferredUsername)
+                : (sanitizeUsername(fallback) || 'Piloto');
+            const { error } = await supabaseClient.from('player_profiles').upsert({
+                id: user.id,
+                username,
+                crystals: 200,
+                high_score: 0,
+                level: 1,
+                equipped_ship: 'viper_cyan',
+                unlocked_ships: ['viper_cyan'],
+                upgrades: { shieldDuration: 1, crystalMagnet: 1, weaponPower: 1 },
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'id' });
+            if (error) console.warn('No se pudo crear el perfil en la nube:', error.message);
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const box = document.getElementById('toast-box');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-msg');
+
+            msg.textContent = message;
+            box.className = 'glass-panel px-4 py-3 rounded-xl flex items-center gap-3 shadow-2xl border ';
+            if (type === 'success') {
+                box.classList.add('border-emerald-400/70');
+                icon.className = 'ph-fill ph-check-circle text-emerald-400 text-xl';
+            } else if (type === 'error') {
+                box.classList.add('border-pink-500/70');
+                icon.className = 'ph-fill ph-warning-circle text-pink-500 text-xl';
+            } else {
+                box.classList.add('border-cyan-400/70');
+                icon.className = 'ph-fill ph-info text-cyan-400 text-xl';
+            }
+
+            toast.classList.remove('opacity-0', 'translate-y-4');
+            clearTimeout(showToast._timer);
+            showToast._timer = setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+            }, 3200);
+        }
+
+        // =========================================================================
+        // 3. HANGAR INTERACTIVO (5 NAVES) Y 4 BIOMAS
+        // =========================================================================
+        const SHIPS_CATALOG = [
+            {
+                id: 'viper_cyan',
+                name: 'Viper MK-I',
+                role: 'INTERCEPTOR EQUILIBRADO',
+                desc: 'Interceptor equilibrado estándar con respuesta ágil entre carriles.',
+                price: 'GRATIS',
+                color: '#00f3ff',
+                glow: 'rgba(0, 243, 255, 0.35)',
+                speed: 80,
+                handling: 84,
+                fire: 75
+            },
+            {
+                id: 'crimson_fury',
+                name: 'Crimson Fury',
+                role: 'CAZA DE ASALTO',
+                desc: 'Caza ofensivo con ráfaga de plasma carmesí y empuje agresivo.',
+                price: '300 💎',
+                color: '#ff0055',
+                glow: 'rgba(255, 0, 85, 0.35)',
+                speed: 88,
+                handling: 82,
+                fire: 86
+            },
+            {
+                id: 'toxic_phantom',
+                name: 'Toxic Phantom',
+                role: 'AGILIDAD DE ALTA VELOCIDAD',
+                desc: 'Prototipo de alta maniobrabilidad pensado para rutas densas.',
+                price: '750 💎',
+                color: '#00ff88',
+                glow: 'rgba(0, 255, 136, 0.35)',
+                speed: 94,
+                handling: 95,
+                fire: 82
+            },
+            {
+                id: 'solar_gold',
+                name: 'Solar Sovereign',
+                role: 'CRUCERO DE ÉLITE',
+                desc: 'Unidad de élite en oro cuántico con casco reforzado y gran cadencia.',
+                price: '1,600 💎',
+                color: '#ffe600',
+                glow: 'rgba(255, 230, 0, 0.35)',
+                speed: 92,
+                handling: 88,
+                fire: 90
+            },
+            {
+                id: 'omega_void',
+                name: 'Omega Void',
+                role: 'NUCLEO EXPERIMENTAL',
+                desc: 'Nave experimental de máxima potencia para duelos contra el Acorazado Omega.',
+                price: '3,000 💎',
+                color: '#b829ea',
+                glow: 'rgba(184, 41, 234, 0.42)',
+                speed: 98,
+                handling: 94,
+                fire: 100
+            }
+        ];
+
+        const shipsGrid = document.getElementById('ships-grid');
+
+        function selectShip(shipId) {
+            const ship = SHIPS_CATALOG.find(item => item.id === shipId) || SHIPS_CATALOG[0];
+
+            document.querySelectorAll('[data-ship-card]').forEach(card => {
+                const active = card.getAttribute('data-ship-card') === ship.id;
+                card.className = active
+                    ? 'glass-panel border-2 border-cyan-400 transition rounded-2xl p-5 flex flex-col items-center text-center cursor-pointer shadow-[0_0_20px_rgba(0,243,255,0.2)]'
+                    : 'glass-panel border border-white/10 hover:border-cyan-400/50 transition rounded-2xl p-5 flex flex-col items-center text-center cursor-pointer';
+            });
+
+            document.getElementById('inspector-name').textContent = ship.name;
+            document.getElementById('inspector-role').textContent = ship.role;
+            document.getElementById('inspector-price').textContent = ship.price;
+            document.getElementById('inspector-price').style.color = ship.color;
+            document.getElementById('inspector-desc').textContent = ship.desc;
+            document.getElementById('inspector-icon').style.color = ship.color;
+
+            document.getElementById('stat-speed-val').textContent = `${ship.speed}%`;
+            document.getElementById('stat-speed-bar').style.width = `${ship.speed}%`;
+
+            document.getElementById('stat-handling-val').textContent = `${ship.handling}%`;
+            document.getElementById('stat-handling-bar').style.width = `${ship.handling}%`;
+
+            document.getElementById('stat-fire-val').textContent = `${ship.fire}%`;
+            document.getElementById('stat-fire-bar').style.width = `${ship.fire}%`;
+        }
+
+        shipsGrid.innerHTML = SHIPS_CATALOG.map((ship, idx) => `
+            <div data-ship-card="${ship.id}" onclick="selectShip('${ship.id}')" class="${idx === 0 ? 'glass-panel border-2 border-cyan-400' : 'glass-panel border border-white/10 hover:border-cyan-400/50'} transition rounded-2xl p-5 flex flex-col items-center text-center cursor-pointer">
+                <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border border-white/10" style="background: radial-gradient(circle, ${ship.glow}, transparent 75%)">
+                    <i class="ph-fill ph-airplane-tilt text-3xl" style="color: ${ship.color}"></i>
+                </div>
+                <h3 class="font-orbitron font-bold text-base text-white">${ship.name}</h3>
+                <p class="text-xs text-gray-400 mt-1.5 flex-1">${ship.desc}</p>
+                <div class="mt-4 px-3 py-1 rounded-lg bg-black/60 border border-white/10 font-orbitron text-xs font-bold" style="color: ${ship.color}">
+                    ${ship.price}
+                </div>
+            </div>
+        `).join('');
+
+        const BIOMES_CATALOG = [
+            {
+                id: 'cyan_sector',
+                title: '01. Sector Cian',
+                subtitle: '0m — 1,000m • Autopista urbana inicial y lectura clara de carriles',
+                range: '0m – 1,000m',
+                phase: 'FASE I',
+                accent: 'border-cyan-400',
+                titleColor: 'text-cyan-300',
+                detail: '01. Sector Cian — Autopista urbana iluminada en cian con ritmo progresivo para entrar en calor.'
+            },
+            {
+                id: 'synth_sunset',
+                title: '02. Atardecer Synthwave',
+                subtitle: '1,000m — 2,500m • Contraste magenta y mayor velocidad de crucero',
+                range: '1,000m – 2,500m',
+                phase: 'FASE II',
+                accent: 'border-pink-500',
+                titleColor: 'text-pink-400',
+                detail: '02. Atardecer Synthwave — Horizonte neón magenta con secuencias más rápidas entre carriles.'
+            },
+            {
+                id: 'crimson_core',
+                title: '03. Núcleo Carmesí',
+                subtitle: '2,500m — 5,000m • Zona de incursión del Acorazado Omega',
+                range: '2,500m – 5,000m',
+                phase: 'FASE III',
+                accent: 'border-red-500',
+                titleColor: 'text-red-400',
+                detail: '03. Núcleo Carmesí — Sector de alta presión donde se activan los encuentros con el Acorazado Omega.'
+            },
+            {
+                id: 'quantum_void',
+                title: '04. Vacío Cuántico',
+                subtitle: '+5,000m • Velocidad máxima para carreras de récord',
+                range: '+5,000m',
+                phase: 'FASE IV',
+                accent: 'border-purple-500',
+                titleColor: 'text-purple-400',
+                detail: '04. Vacío Cuántico — Tramo extremo de larga distancia para pilotos de alto nivel.'
+            }
+        ];
+
+        function selectBiome(biomeId) {
+            const biome = BIOMES_CATALOG.find(b => b.id === biomeId) || BIOMES_CATALOG[0];
+            document.getElementById('biome-spotlight-text').textContent = biome.detail;
+            document.getElementById('biome-spotlight-range').textContent = biome.range;
+        }
+
+        document.getElementById('biomes-list').innerHTML = BIOMES_CATALOG.map(biome => `
+            <button type="button" onclick="selectBiome('${biome.id}')" class="w-full text-left glass-panel border-l-4 ${biome.accent} hover:bg-white/5 p-4 rounded-r-xl flex justify-between items-center gap-3 transition">
+                <div>
+                    <div class="font-orbitron font-bold text-sm ${biome.titleColor}">${biome.title}</div>
+                    <div class="text-xs text-gray-400">${biome.subtitle}</div>
+                </div>
+                <span class="text-xs font-orbitron ${biome.titleColor} shrink-0">${biome.phase}</span>
+            </button>
+        `).join('');
+
+        // =========================================================================
+        // 4. RANKING GLOBAL Y CUENTA DE PILOTO (SUPABASE)
+        // =========================================================================
+        async function loadLeaderboard() {
+            const container = document.getElementById('leaderboard-container');
+            if (!supabaseClient) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-gray-400 text-sm">
+                        <i class="ph-fill ph-plugs text-2xl text-cyan-400 mb-2 block"></i>
+                        Configura la URL y la clave pública en <code class="text-cyan-300">SUPABASE_CONFIG</code> (las mismas de <code class="text-cyan-300">CyberDash/supabase_config.json</code>) para ver el Ranking Global en vivo.
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('player_profiles')
+                    .select('id, username, high_score, level, equipped_ship')
+                    .order('high_score', { ascending: false })
+                    .limit(15);
+
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<div class="text-center py-8 text-gray-400 text-sm">Aún no hay récords registrados. ¡Reserva tu alias y sé el primero!</div>`;
+                    return;
+                }
+
+                container.innerHTML = '';
+                data.forEach((row, index) => {
+                    const isMe = currentUser && row.id === currentUser.id;
+                    const rowEl = document.createElement('div');
+                    rowEl.className = `flex items-center justify-between p-3.5 rounded-xl ${isMe ? 'bg-cyan-500/20 border border-cyan-400' : 'bg-black/50 border border-white/10'}`;
+
+                    const leftDiv = document.createElement('div');
+                    leftDiv.className = 'flex items-center gap-3.5';
+
+                    const rankSpan = document.createElement('span');
+                    rankSpan.className = 'font-orbitron font-black w-7 text-center ' + (index === 0 ? 'text-yellow-400 text-lg' : index === 1 ? 'text-gray-300' : index === 2 ? 'text-amber-600' : 'text-gray-500');
+                    rankSpan.textContent = `#${index + 1}`;
+
+                    const infoDiv = document.createElement('div');
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'font-bold text-sm text-white flex items-center gap-2';
+                    nameDiv.textContent = row.username || 'Piloto';
+
+                    if (isMe) {
+                        const badge = document.createElement('span');
+                        badge.className = 'text-[10px] bg-cyan-400 text-black px-1.5 py-0.5 rounded font-orbitron font-bold';
+                        badge.textContent = 'TÚ';
+                        nameDiv.appendChild(badge);
+                    }
+
+                    const subDiv = document.createElement('div');
+                    subDiv.className = 'text-xs text-gray-400';
+                    subDiv.textContent = `Nivel ${row.level || 1}`;
+
+                    infoDiv.appendChild(nameDiv);
+                    infoDiv.appendChild(subDiv);
+                    leftDiv.appendChild(rankSpan);
+                    leftDiv.appendChild(infoDiv);
+
+                    const scoreDiv = document.createElement('div');
+                    scoreDiv.className = 'font-orbitron font-black text-base text-cyan-300';
+                    scoreDiv.textContent = `${Number(row.high_score || 0).toLocaleString()} PTS`;
+
+                    rowEl.appendChild(leftDiv);
+                    rowEl.appendChild(scoreDiv);
+                    container.appendChild(rowEl);
+                });
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = `<div class="text-center py-6 text-pink-400 text-sm">Error al cargar la clasificación global.</div>`;
+            }
+        }
+
+        async function refreshUserSession() {
+            if (!supabaseClient) {
+                currentUser = null;
+                loadLeaderboard();
+                return;
+            }
+            const { data: authData } = await supabaseClient.auth.getUser();
+            const user = authData?.user || null;
+            currentUser = user;
+
+            const navLabel = document.getElementById('nav-user-label');
+            const loggedInView = document.getElementById('modal-logged-in');
+            const formsView = document.getElementById('modal-auth-forms');
+
+            if (user) {
+                let profile = null;
+                const profileResult = await supabaseClient
+                    .from('player_profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .maybeSingle();
+                profile = profileResult.data;
+
+                // Si la cuenta se creó antes de existir la tabla, completamos el perfil.
+                if (!profile) {
+                    await ensureProfile(user, user.user_metadata?.username);
+                    const retry = await supabaseClient
+                        .from('player_profiles')
+                        .select('*')
+                        .eq('id', user.id)
+                        .maybeSingle();
+                    profile = retry.data;
+                }
+
+                const fallback = (user.email || 'Piloto').split('@')[0];
+                const username = profile?.username || sanitizeUsername(fallback) || 'Piloto';
+                navLabel.textContent = username;
+                document.getElementById('modal-username').textContent = username;
+                document.getElementById('modal-email').textContent = user.email || '';
+                document.getElementById('modal-highscore').textContent = Number(profile?.high_score || 0).toLocaleString();
+                document.getElementById('modal-crystals').textContent = Number(profile?.crystals || 0).toLocaleString();
+                document.getElementById('modal-level').textContent = profile?.level || 1;
+
+                loggedInView.classList.remove('hidden');
+                formsView.classList.add('hidden');
+            } else {
+                navLabel.textContent = 'ACCESO PILOTO';
+                loggedInView.classList.add('hidden');
+                formsView.classList.remove('hidden');
+            }
+            loadLeaderboard();
+        }
+
+        const authModal = document.getElementById('auth-modal');
+        document.getElementById('btn-nav-auth').addEventListener('click', () => authModal.classList.remove('hidden'));
+        document.getElementById('btn-hero-auth').addEventListener('click', () => {
+            tabRegister.click();
+            authModal.classList.remove('hidden');
+        });
+        document.getElementById('btn-close-auth').addEventListener('click', () => authModal.classList.add('hidden'));
+        document.getElementById('btn-refresh-lb').addEventListener('click', () => {
+            loadLeaderboard();
+            showToast('Ranking actualizado', 'info');
+        });
+
+        let authMode = 'login';
+        const tabLogin = document.getElementById('tab-login');
+        const tabRegister = document.getElementById('tab-register');
+        const groupUsername = document.getElementById('group-username');
+        const btnSubmitAuth = document.getElementById('btn-submit-auth');
+
+        tabLogin.addEventListener('click', () => {
+            authMode = 'login';
+            tabLogin.className = 'flex-1 py-2 rounded-lg font-orbitron text-xs font-bold bg-cyan-500 text-black transition';
+            tabRegister.className = 'flex-1 py-2 rounded-lg font-orbitron text-xs font-bold text-gray-400 transition';
+            groupUsername.classList.add('hidden');
+            btnSubmitAuth.textContent = 'ENTRAR AL SISTEMA';
+        });
+
+        tabRegister.addEventListener('click', () => {
+            authMode = 'register';
+            tabRegister.className = 'flex-1 py-2 rounded-lg font-orbitron text-xs font-bold bg-cyan-500 text-black transition';
+            tabLogin.className = 'flex-1 py-2 rounded-lg font-orbitron text-xs font-bold text-gray-400 transition';
+            groupUsername.classList.remove('hidden');
+            btnSubmitAuth.textContent = 'CREAR CUENTA DE PILOTO';
+        });
+
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!supabaseClient) {
+                showToast('Configura primero tus claves de Supabase', 'error');
+                return;
+            }
+
+            const email = document.getElementById('input-email').value.trim();
+            const password = document.getElementById('input-password').value;
+            const rawUsername = document.getElementById('input-username').value;
+
+            btnSubmitAuth.disabled = true;
+            btnSubmitAuth.textContent = 'CONECTANDO...';
+
+            try {
+                if (authMode === 'register') {
+                    const cleanUser = sanitizeUsername(rawUsername);
+                    if (cleanUser.length < 3) {
+                        showToast('El alias debe tener al menos 3 caracteres válidos', 'error');
+                        return;
+                    }
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email,
+                        password,
+                        options: { data: { username: cleanUser } }
+                    });
+                    if (error) throw error;
+
+                    if (!data.session) {
+                        // Supabase pide confirmar el correo: sin sesión no se puede
+                        // insertar el perfil (RLS exige auth.uid()).
+                        showToast('Cuenta creada. Confirma tu correo y luego inicia sesión.', 'success');
+                        authModal.classList.add('hidden');
+                        return;
+                    }
+                    await ensureProfile(data.user, cleanUser);
+                    showToast('¡Cuenta creada y sincronizada!', 'success');
+                } else {
+                    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                    showToast('Sesión iniciada correctamente', 'success');
+                }
+                await refreshUserSession();
+                authModal.classList.add('hidden');
+            } catch (err) {
+                showToast(err.message || 'Error de autenticación', 'error');
+            } finally {
+                btnSubmitAuth.disabled = false;
+                btnSubmitAuth.textContent = authMode === 'login' ? 'ENTRAR AL SISTEMA' : 'CREAR CUENTA DE PILOTO';
+            }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', async () => {
+            if (!supabaseClient) return;
+            await supabaseClient.auth.signOut();
+            await refreshUserSession();
+            showToast('Sesión cerrada', 'info');
+        });
+
+        // =========================================================================
+        // 5. FONDO ANIMADO DE REJILLA CYBERPUNK (CANVAS)
+        // =========================================================================
+        const bgCanvas = document.getElementById('bgCanvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let gridOffset = 0;
+
+        function resizeBg() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeBg);
+        resizeBg();
+
+        function animateBg() {
+            bgCtx.fillStyle = '#05050a';
+            bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+            gridOffset = (gridOffset + 0.8) % 60;
+            bgCtx.strokeStyle = 'rgba(0, 243, 255, 0.08)';
+            bgCtx.lineWidth = 1;
+
+            for (let x = 0; x < bgCanvas.width; x += 60) {
+                bgCtx.beginPath();
+                bgCtx.moveTo(x, 0);
+                bgCtx.lineTo(x, bgCanvas.height);
+                bgCtx.stroke();
+            }
+
+            for (let y = gridOffset; y < bgCanvas.height; y += 60) {
+                bgCtx.beginPath();
+                bgCtx.moveTo(0, y);
+                bgCtx.lineTo(bgCanvas.width, y);
+                bgCtx.stroke();
+            }
+
+            requestAnimationFrame(animateBg);
+        }
+
+        animateBg();
+        refreshUserSession();
+
+        // Mantiene la interfaz sincronizada si la sesión cambia en otra pestaña
+        // o cuando Supabase renueva el token automáticamente.
+        if (supabaseClient) {
+            supabaseClient.auth.onAuthStateChange((event) => {
+                if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+                    refreshUserSession();
+                }
+            });
+        }
+    </script>
+</body>
+</html>
