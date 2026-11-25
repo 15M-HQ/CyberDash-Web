@@ -177,6 +177,7 @@
             </a>
 
             <nav class="hidden lg:flex items-center gap-6 text-xs font-orbitron font-bold tracking-wider text-gray-300">
+                <a href="#trailer" class="hover:text-pink-400 transition">TRÁILER</a>
                 <a href="#lanzamiento" class="hover:text-pink-400 transition">LANZAMIENTO</a>
                 <a href="#hangar" class="hover:text-cyan-400 transition">NAVES Y MEJORAS</a>
                 <a href="#sectores" class="hover:text-cyan-400 transition">SECTORES Y JEFE</a>
@@ -261,6 +262,9 @@
                 <button id="btn-hero-auth" type="button" class="btn-cyber w-full sm:w-auto flex-1 py-4 px-7 bg-gradient-to-r from-cyan-500 via-blue-500 to-pink-600 text-white font-orbitron font-black text-xs sm:text-sm tracking-widest shadow-[0_0_30px_rgba(0,243,255,0.35)] flex items-center justify-center gap-2.5">
                     <i class="ph-fill ph-user-plus text-xl"></i> RESERVAR ALIAS DE PILOTO
                 </button>
+                <a href="#trailer" class="btn-cyber w-full sm:w-auto py-4 px-6 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-orbitron font-black text-xs sm:text-sm tracking-wider shadow-[0_0_30px_rgba(255,0,127,0.35)] flex items-center justify-center gap-2">
+                    <i class="ph-fill ph-play-circle text-xl"></i> VER TRÁILER
+                </a>
                 <a href="#hangar" class="btn-cyber w-full sm:w-auto py-4 px-6 glass-panel neon-border-cyan text-cyan-300 font-orbitron font-bold text-xs sm:text-sm tracking-wider flex items-center justify-center gap-2">
                     <i class="ph-fill ph-airplane-tilt text-lg"></i> EXPLORAR NAVES
                 </a>
@@ -284,6 +288,33 @@
                     <div class="font-orbitron text-lg sm:text-2xl font-black text-purple-400">CROSS-SAVE</div>
                     <div class="text-xs uppercase tracking-wider text-gray-400 font-bold mt-1">PC + Android</div>
                 </div>
+            </div>
+        </section>
+
+        <!-- ===================================================== -->
+        <!-- TRÁILER OFICIAL                                       -->
+        <!-- ===================================================== -->
+        <section id="trailer" class="max-w-5xl mx-auto px-4 sm:px-6 py-12 border-t border-white/10">
+            <div class="text-center mb-7">
+                <span class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-pink-500/20 border border-pink-400/50 text-pink-300 text-[11px] font-orbitron font-bold uppercase tracking-widest">
+                    <i class="ph-fill ph-video-camera"></i> NUEVO
+                </span>
+                <h2 class="font-orbitron text-3xl sm:text-4xl font-black text-white mt-3 neon-text-cyan">TRÁILER OFICIAL</h2>
+                <p class="text-sm text-gray-400 mt-2">Velocidad, jefes y naves. Mira lo que te espera en CyberDash: Neon Overdrive.</p>
+            </div>
+
+            <div class="glass-panel neon-border-cyan panel-cut p-2 sm:p-3 rounded-2xl shadow-[0_0_40px_rgba(0,243,255,0.18)]">
+                <video controls playsinline preload="metadata" poster="trailer_poster.jpg" class="w-full aspect-video rounded-xl bg-black">
+                    <source src="CyberDash_Trailer.mp4" type="video/mp4">
+                    Tu navegador no soporta vídeo HTML5.
+                    <a href="CyberDash_Trailer.mp4" class="text-cyan-300 underline">Descargar tráiler</a>.
+                </video>
+            </div>
+
+            <div class="text-center mt-5">
+                <a href="CyberDash_Trailer.mp4" download class="btn-cyber px-6 py-3 glass-panel neon-border-pink text-pink-300 font-orbitron font-bold text-xs tracking-wider inline-flex items-center gap-2">
+                    <i class="ph-bold ph-download-simple text-lg"></i> DESCARGAR TRÁILER
+                </a>
             </div>
         </section>
 
