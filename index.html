@@ -303,18 +303,38 @@
                 <p class="text-sm text-gray-400 mt-2">Velocidad, jefes y naves. Mira lo que te espera en CyberDash: Neon Overdrive.</p>
             </div>
 
-            <div class="glass-panel neon-border-cyan panel-cut p-2 sm:p-3 rounded-2xl shadow-[0_0_40px_rgba(0,243,255,0.18)]">
-                <video controls playsinline preload="metadata" poster="trailer_poster.jpg" class="w-full aspect-video rounded-xl bg-black">
-                    <source src="CyberDash_Trailer.mp4" type="video/mp4">
-                    Tu navegador no soporta vídeo HTML5.
-                    <a href="CyberDash_Trailer.mp4" class="text-cyan-300 underline">Descargar tráiler</a>.
-                </video>
-            </div>
+            <div class="grid gap-8 md:grid-cols-2 items-start">
+                <div>
+                    <div class="text-center text-[11px] font-orbitron font-bold tracking-widest text-cyan-300 uppercase mb-2">Versión panorámica · PC y Android</div>
+                    <div class="glass-panel neon-border-cyan panel-cut p-2 sm:p-3 rounded-2xl shadow-[0_0_40px_rgba(0,243,255,0.18)]">
+                        <video controls playsinline preload="metadata" poster="assets/trailer_poster.jpg" class="w-full aspect-video rounded-xl bg-black">
+                            <source src="assets/CyberDash_Trailer.mp4" type="video/mp4">
+                            Tu navegador no soporta vídeo HTML5.
+                            <a href="assets/CyberDash_Trailer.mp4" class="text-cyan-300 underline">Descargar tráiler</a>.
+                        </video>
+                    </div>
+                    <div class="text-center mt-4">
+                        <a href="assets/CyberDash_Trailer.mp4" download class="btn-cyber px-6 py-3 glass-panel neon-border-pink text-pink-300 font-orbitron font-bold text-xs tracking-wider inline-flex items-center gap-2">
+                            <i class="ph-bold ph-download-simple text-lg"></i> DESCARGAR TRÁILER
+                        </a>
+                    </div>
+                </div>
 
-            <div class="text-center mt-5">
-                <a href="CyberDash_Trailer.mp4" download class="btn-cyber px-6 py-3 glass-panel neon-border-pink text-pink-300 font-orbitron font-bold text-xs tracking-wider inline-flex items-center gap-2">
-                    <i class="ph-bold ph-download-simple text-lg"></i> DESCARGAR TRÁILER
-                </a>
+                <div>
+                    <div class="text-center text-[11px] font-orbitron font-bold tracking-widest text-pink-300 uppercase mb-2">Versión vertical · Móvil</div>
+                    <div class="glass-panel neon-border-pink panel-cut p-2 sm:p-3 rounded-2xl shadow-[0_0_40px_rgba(255,0,127,0.18)] mx-auto max-w-[320px]">
+                        <video controls playsinline preload="metadata" poster="assets/CyberDash_Trailer_Mobile_Poster.jpg" class="w-full aspect-[9/16] rounded-xl bg-black">
+                            <source src="assets/CyberDash_Trailer_Mobile.mp4" type="video/mp4">
+                            Tu navegador no soporta vídeo HTML5.
+                            <a href="assets/CyberDash_Trailer_Mobile.mp4" class="text-pink-300 underline">Descargar tráiler móvil</a>.
+                        </video>
+                    </div>
+                    <div class="text-center mt-4">
+                        <a href="assets/CyberDash_Trailer_Mobile.mp4" download class="btn-cyber px-6 py-3 glass-panel neon-border-cyan text-cyan-300 font-orbitron font-bold text-xs tracking-wider inline-flex items-center gap-2">
+                            <i class="ph-bold ph-download-simple text-lg"></i> DESCARGAR TRÁILER MÓVIL
+                        </a>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -600,6 +620,9 @@
             <div>
                 Lanzamiento oficial: Domingo 13 de Diciembre de 2026 • Sincronizado con Supabase
             </div>
+            <button id="btn-testers-access" type="button" class="text-[10px] uppercase tracking-[0.2em] text-gray-500 hover:text-pink-400 transition flex items-center gap-1.5 opacity-70 hover:opacity-100">
+                <i class="ph-bold ph-lock-key text-xs"></i> Acceso testers
+            </button>
         </div>
     </footer>
 
@@ -640,6 +663,28 @@
                     </div>
                 </div>
 
+                <button id="btn-change-password" type="button" class="w-full py-3 rounded-xl border border-cyan-500/50 text-cyan-300 font-orbitron text-xs font-bold hover:bg-cyan-500/10 transition flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-lock-key text-base"></i> CAMBIAR CONTRASEÑA
+                </button>
+
+                <div id="password-change-panel" class="hidden bg-black/60 border border-pink-500/30 rounded-2xl p-4 space-y-3">
+                    <div class="font-orbitron text-xs font-bold text-pink-300 uppercase tracking-wider">Nueva contraseña</div>
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-gray-400 block mb-1">Contraseña actual</label>
+                        <input type="password" id="input-current-password" autocomplete="current-password" placeholder="Contraseña actual" class="w-full px-4 py-2.5 rounded-xl bg-black/70 border border-white/15 text-white text-sm focus:outline-none focus:border-cyan-400">
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-bold uppercase text-gray-400 block mb-1">Nueva contraseña</label>
+                        <input type="password" id="input-new-password" autocomplete="new-password" minlength="6" placeholder="Mínimo 6 caracteres" class="w-full px-4 py-2.5 rounded-xl bg-black/70 border border-cyan-500/40 text-white text-sm focus:outline-none focus:border-cyan-400">
+                    </div>
+                    <button id="btn-save-password" type="button" class="btn-cyber w-full py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-orbitron font-bold text-xs tracking-wider">
+                        GUARDAR NUEVA CONTRASEÑA
+                    </button>
+                    <button id="btn-cancel-password" type="button" class="w-full py-2 text-xs font-orbitron font-bold text-gray-400 hover:text-white transition">
+                        CANCELAR
+                    </button>
+                </div>
+
                 <button id="btn-logout" type="button" class="w-full py-3 rounded-xl border border-pink-500/50 text-pink-400 font-orbitron text-xs font-bold hover:bg-pink-500/10 transition">
                     CERRAR SESIÓN
                 </button>
@@ -670,6 +715,33 @@
                     </button>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- ACCESO PRIVADO DE TESTERS (CLAVE NUNCA EN TEXTO PLANO)     -->
+    <!-- ========================================================= -->
+    <div id="testers-modal" class="hidden fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="glass-panel neon-border-pink rounded-3xl w-full max-w-sm p-6 sm:p-8 relative">
+            <button id="btn-close-testers" type="button" aria-label="Cerrar acceso testers" class="absolute top-5 right-5 p-2 rounded-xl bg-white/10 text-white hover:bg-white/20 transition">
+                <i class="ph-bold ph-x text-lg"></i>
+            </button>
+
+            <h3 class="font-orbitron text-lg font-black text-pink-400 flex items-center gap-2 mb-1">
+                <i class="ph-fill ph-lock-key"></i> ACCESO TESTERS
+            </h3>
+            <p class="text-xs text-gray-400 mb-5">Introduce la clave que te entregó el equipo de desarrollo para abrir el portal privado.</p>
+
+            <form id="testers-form" class="space-y-3.5">
+                <div>
+                    <label class="text-[11px] font-bold uppercase text-pink-300 block mb-1">Clave de acceso</label>
+                    <input type="password" id="input-testers-code" autocomplete="off" placeholder="••••••••" class="w-full px-4 py-2.5 rounded-xl bg-black/70 border border-pink-500/40 text-white text-sm focus:outline-none focus:border-pink-400">
+                </div>
+                <p id="testers-error" class="hidden text-xs text-pink-400" aria-live="polite"></p>
+                <button id="btn-testers-submit" type="submit" class="btn-cyber w-full py-3.5 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-orbitron font-bold text-xs tracking-wider">
+                    VERIFICAR Y ENTRAR
+                </button>
+            </form>
         </div>
     </div>
 
@@ -1205,8 +1277,148 @@
         document.getElementById('btn-logout').addEventListener('click', async () => {
             if (!supabaseClient) return;
             await supabaseClient.auth.signOut();
+            passwordPanel.classList.add('hidden');
+            currentPasswordInput.value = '';
+            newPasswordInput.value = '';
             await refreshUserSession();
             showToast('Sesión cerrada', 'info');
+        });
+
+        // =========================================================================
+        // CAMBIO DE CONTRASEÑA DEL PILOTO (SUPABASE AUTH)
+        // =========================================================================
+        const passwordPanel = document.getElementById('password-change-panel');
+        const currentPasswordInput = document.getElementById('input-current-password');
+        const newPasswordInput = document.getElementById('input-new-password');
+        const savePasswordButton = document.getElementById('btn-save-password');
+
+        document.getElementById('btn-change-password').addEventListener('click', () => {
+            const willOpen = passwordPanel.classList.contains('hidden');
+            passwordPanel.classList.toggle('hidden');
+            if (willOpen) currentPasswordInput.focus();
+        });
+
+        document.getElementById('btn-cancel-password').addEventListener('click', () => {
+            passwordPanel.classList.add('hidden');
+            currentPasswordInput.value = '';
+            newPasswordInput.value = '';
+        });
+
+        savePasswordButton.addEventListener('click', async () => {
+            if (!supabaseClient || !currentUser) {
+                showToast('Inicia sesión para cambiar tu contraseña', 'error');
+                return;
+            }
+            const currentPassword = currentPasswordInput.value;
+            const newPassword = newPasswordInput.value;
+            if (newPassword.length < 6) {
+                showToast('La nueva contraseña debe tener al menos 6 caracteres', 'error');
+                return;
+            }
+            if (currentPassword && currentPassword === newPassword) {
+                showToast('La nueva contraseña debe ser diferente', 'error');
+                return;
+            }
+
+            savePasswordButton.disabled = true;
+            savePasswordButton.textContent = 'ACTUALIZANDO...';
+            try {
+                // Supabase puede exigir reautenticación si la sesión es antigua.
+                if (currentPassword) {
+                    const { error: reauthError } = await supabaseClient.auth.signInWithPassword({
+                        email: currentUser.email,
+                        password: currentPassword
+                    });
+                    if (reauthError) throw reauthError;
+                }
+                const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+                if (error) throw error;
+
+                passwordPanel.classList.add('hidden');
+                currentPasswordInput.value = '';
+                newPasswordInput.value = '';
+                showToast('Contraseña actualizada correctamente', 'success');
+                await refreshUserSession();
+            } catch (err) {
+                const message = String(err.message || '');
+                showToast(
+                    message.toLowerCase().includes('reauthentication')
+                        ? 'Por seguridad, escribe tu contraseña actual e inténtalo de nuevo'
+                        : (message || 'No se pudo actualizar la contraseña'),
+                    'error'
+                );
+            } finally {
+                savePasswordButton.disabled = false;
+                savePasswordButton.textContent = 'GUARDAR NUEVA CONTRASEÑA';
+            }
+        });
+
+        // =========================================================================
+        // ACCESO PRIVADO DE TESTERS (LA CLAVE SE VERIFICA POR HASH)
+        // La clave real no aparece en el HTML: solo su huella con salt.
+        // =========================================================================
+        const TESTERS_SALT = 'CyberDashTesters2026';
+        const TESTERS_SHA256 = 'c8b17bd769dfe6d138d10a6756284c4dc9565bc2430ad740466b59c744aa5517';
+        const TESTERS_FNV1A = '45a80e97'; // Fallback para file:// sin crypto.subtle.
+        const testersModal = document.getElementById('testers-modal');
+        const testersForm = document.getElementById('testers-form');
+        const testersCodeInput = document.getElementById('input-testers-code');
+        const testersSubmit = document.getElementById('btn-testers-submit');
+        const testersError = document.getElementById('testers-error');
+
+        function fnv1aHex(value) {
+            let hash = 2166136261 >>> 0;
+            for (let i = 0; i < value.length; i++) {
+                hash ^= value.charCodeAt(i);
+                hash = Math.imul(hash, 16777619) >>> 0;
+            }
+            return hash.toString(16).padStart(8, '0');
+        }
+
+        async function testersDigest(value) {
+            if (window.crypto && crypto.subtle && window.TextEncoder) {
+                try {
+                    const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+                    return Array.from(new Uint8Array(bytes))
+                        .map(byte => byte.toString(16).padStart(2, '0'))
+                        .join('');
+                } catch (_) { /* Se usa el fallback más abajo. */ }
+            }
+            return fnv1aHex(value);
+        }
+
+        document.getElementById('btn-testers-access').addEventListener('click', () => {
+            testersError.classList.add('hidden');
+            testersError.textContent = '';
+            testersCodeInput.value = '';
+            testersCodeInput.classList.remove('border-pink-500');
+            testersModal.classList.remove('hidden');
+            testersCodeInput.focus();
+        });
+
+        document.getElementById('btn-close-testers').addEventListener('click', () => {
+            testersModal.classList.add('hidden');
+        });
+
+        testersModal.addEventListener('click', (event) => {
+            if (event.target === testersModal) testersModal.classList.add('hidden');
+        });
+
+        testersForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const digest = await testersDigest(TESTERS_SALT + testersCodeInput.value.trim());
+            if (digest !== TESTERS_SHA256 && digest !== TESTERS_FNV1A) {
+                testersError.textContent = 'Clave incorrecta. Solicítala al equipo de desarrollo.';
+                testersError.classList.remove('hidden');
+                testersCodeInput.classList.add('border-pink-500');
+                showToast('Clave de testers incorrecta', 'error');
+                return;
+            }
+
+            testersSubmit.disabled = true;
+            testersSubmit.textContent = 'ABRIENDO PORTAL...';
+            showToast('Acceso de testers autorizado', 'success');
+            window.location.href = 'testers/portal_privado_de_testers_cyberdash_neon_overdrive.html';
         });
 
         // =========================================================================

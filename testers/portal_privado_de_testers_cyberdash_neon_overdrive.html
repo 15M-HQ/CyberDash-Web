@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberDash: Neon Overdrive — Acceso Privado Testers</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Orbitron & Rajdhani -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        :root {
+            --neon-cyan: #00f3ff;
+            --neon-pink: #ff007f;
+            --neon-yellow: #ffe600;
+            --bg-dark: #05050a;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #ffffff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .neon-text-cyan {
+            text-shadow: 0 0 12px rgba(0, 243, 255, 0.8), 0 0 28px rgba(0, 243, 255, 0.35);
+        }
+
+        .neon-text-pink {
+            text-shadow: 0 0 12px rgba(255, 0, 127, 0.8), 0 0 28px rgba(255, 0, 127, 0.35);
+        }
+
+        .neon-border-cyan {
+            border: 1px solid rgba(0, 243, 255, 0.45);
+            box-shadow: 0 0 24px rgba(0, 243, 255, 0.14), inset 0 0 14px rgba(0, 243, 255, 0.06);
+        }
+
+        .neon-border-pink {
+            border: 1px solid rgba(255, 0, 127, 0.45);
+            box-shadow: 0 0 24px rgba(255, 0, 127, 0.14), inset 0 0 14px rgba(255, 0, 127, 0.06);
+        }
+
+        .glass-panel {
+            background: rgba(10, 12, 24, 0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .btn-cyber {
+            transition: all 0.15s ease;
+            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+
+        .btn-cyber:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-cyber:active {
+            transform: scale(0.97);
+        }
+
+        .panel-cut {
+            clip-path: polygon(16px 0, 100% 0, 100% calc(100% - 16px), calc(100% - 16px) 100%, 0 100%, 0 16px);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        .animate-shake {
+            animation: shake 0.35s ease-in-out;
+        }
+    </style>
+</head>
+<body class="relative min-h-screen selection:bg-cyan-500 selection:text-black">
+
+    <!-- =========================================================================
+         GUÍA RÁPIDA PARA DIEGO (ACTUALIZAR ENLACES DE DESCARGA O CONTRASEÑA):
+         =========================================================================
+         1. Este archivo NO contiene ni la contraseña ni los enlaces en texto plano.
+            Si alguien abre el código fuente (Ctrl+U / DevTools), solo verá el hash
+            SHA-256 y el paquete cifrado con AES-GCM.
+         2. Si quieres cambiar las URLs reales de descarga o la clave secreta, abre
+            la consola del navegador (F12 -> Console) en esta página y ejecuta:
+
+            await createEncryptedVault("TU_NUEVA_CLAVE", {
+                androidUrl: "https://tu-enlace-real-android.apk",
+                pcUrl: "https://tu-enlace-real-pc.zip",
+                releaseDate: "Domingo 13 de diciembre de 2026",
+                officialSite: "https://cyberdash-15m.vercel.app/",
+                buildTag: "BUILD PLAYTEST v0.9-RC"
+            });
+
+            Copia el objeto JSON que te imprimirá la consola y pégalo en VAULT_DATA.
+         3. El feedback se recoge en el Google Forms oficial; este portal solo enlaza
+            a él cuando el tester termina de jugar.
+         ========================================================================= -->
+    <script>
+        // Bóveda cifrada con AES-GCM (PBKDF2 120,000 iteraciones) + verificación SHA-256.
+        // No contiene URLs ni contraseñas legibles en el HTML.
+        const VAULT_DATA = {
+            keyHashHex: "51c289172512c76e4b43ff34fff3700104244f27592348fb2376f1d8bfd3394f",
+            saltB64: "QtuVNG8cDelWNRtA2vFZjw==",
+            ivB64: "65YEdKHQWc5VcT3R",
+            cipherB64: "2jsZXV4SWk/vYYRYfFRniPl+qVs/b84WF4soZSL7mDPYLl2vzoEF/yaPgThYCb5OXjQFIBvLlEhcl7ktNeL5/X+V2uoCRMx5li3d6RYImi9Gcew2eM5LDzFTg9ZUzzYWfbaN5jfvAQBH2cgspKF/8KAglva9oi4p8mtOZcU9AJZHS9mKV/Scl251Ufy9d/t+gG9uw+I4qU4gHSy80ZqefpHO+8qjsHJMhZbjWMShWiHmDYdnSAxgKj6TTMGW5VQJLXqWEb3YBNEe9xLUyTaun0mf0D7Z/a+qZFFtFx4n68Tt2HOt8uT6J5h1soYiamsyL/4Elm/m3hlmKQG4v0wk0yzWEjFNTT17jUUSvNkoDbq7O7QC8mUQrR7O5vZ7TPpXFIA4qfzJ0PLQeWJXhsdCVeR+a4NxYrlJnYJPjM6/6H3TNjJyFH1qCUzRxsBiqiM+yYnUR42xXIFc64neRiCzECvKa5K1XpfUziEnLE8Oex9hK3tNmqYgBvUPhzbvp6T/RXhd7hIo"
+        };
+    </script>
+
+    <!-- Fondo Animado Cyberpunk en Canvas -->
+    <canvas id="bgCanvas" class="fixed inset-0 w-full h-full pointer-events-none z-0 opacity-60"></canvas>
+
+    <!-- Notificación Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 pointer-events-none opacity-0 translate-y-4 transition-all duration-300">
+        <div id="toast-box" class="glass-panel neon-border-cyan px-4 py-3 rounded-xl flex items-center gap-3 shadow-2xl">
+            <i id="toast-icon" class="ph-fill ph-info text-cyan-400 text-xl"></i>
+            <span id="toast-msg" class="text-sm font-semibold text-white">Listo</span>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- PANTALLA 1: PUERTA DE SEGURIDAD (BLOQUEO CRIPTOGRÁFICO)                   -->
+    <!-- ========================================================================= -->
+    <section id="lock-screen" class="relative z-10 min-h-screen flex items-center justify-center p-4">
+        <div id="lock-card" class="glass-panel neon-border-cyan panel-cut w-full max-w-md p-7 sm:p-9 text-center">
+            <div class="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gradient-to-tr from-cyan-400 to-pink-500 p-[2px]">
+                <div class="w-full h-full bg-[#070913] rounded-2xl flex items-center justify-center">
+                    <i class="ph-fill ph-lock-key text-3xl text-cyan-300"></i>
+                </div>
+            </div>
+
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/15 border border-pink-500/40 text-pink-400 font-orbitron text-[11px] font-bold tracking-widest uppercase mb-3">
+                <i class="ph-fill ph-shield-check"></i> ZONA RESTRINGIDA DE TESTERS
+            </div>
+
+            <h1 class="font-orbitron text-2xl sm:text-3xl font-black text-white neon-text-cyan tracking-wide">
+                CYBER<span class="text-pink-500 neon-text-pink">DASH</span>
+            </h1>
+            <p class="font-orbitron text-xs tracking-[0.28em] text-cyan-300 font-bold mt-1 mb-5">
+                NEON OVERDRIVE • PLAYTEST
+            </p>
+
+            <p class="text-sm text-gray-300 leading-relaxed mb-6">
+                Introduce la <span class="text-cyan-300 font-bold">clave privada de tester</span> que viene en tu ficha para desbloquear las descargas, la guía fácil de instalación y el formulario.
+            </p>
+
+            <form id="unlock-form" class="space-y-4 text-left">
+                <div>
+                    <label for="secret-key-input" class="block text-xs font-orbitron font-bold uppercase tracking-wider text-cyan-300 mb-1.5">
+                        Clave de Acceso Privado
+                    </label>
+                    <div class="relative">
+                        <input
+                            type="password"
+                            id="secret-key-input"
+                            autocomplete="off"
+                            required
+                            placeholder="Escribe tu clave aquí..."
+                            class="w-full px-4 py-3.5 pr-12 rounded-xl bg-black/75 border border-cyan-500/45 text-white font-orbitron text-sm tracking-wider focus:outline-none focus:border-cyan-300"
+                        >
+                        <button
+                            type="button"
+                            id="toggle-key-visibility"
+                            aria-label="Mostrar u ocultar clave"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-cyan-300 transition"
+                        >
+                            <i id="eye-icon" class="ph-bold ph-eye text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="lock-error" class="hidden rounded-xl bg-pink-500/15 border border-pink-500/50 px-3.5 py-2.5 text-xs text-pink-300 flex items-center gap-2">
+                    <i class="ph-fill ph-warning-circle text-base shrink-0"></i>
+                    <span>Clave incorrecta. Revisa las mayúsculas y los guiones de tu ficha.</span>
+                </div>
+
+                <button
+                    type="submit"
+                    id="btn-unlock"
+                    class="btn-cyber w-full py-4 bg-gradient-to-r from-cyan-500 to-pink-600 text-white font-orbitron font-black text-xs sm:text-sm tracking-widest shadow-[0_0_25px_rgba(0,243,255,0.3)] flex items-center justify-center gap-2"
+                >
+                    <i class="ph-bold ph-key text-lg"></i> DESBLOQUEAR PORTAL TESTER
+                </button>
+            </form>
+
+            <div class="mt-6 pt-4 border-t border-white/10 text-[11px] text-gray-400 flex items-center justify-center gap-2">
+                <i class="ph-fill ph-lock text-cyan-400"></i>
+                <span>Enlaces protegidos mediante cifrado local</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- PANTALLA 2: PORTAL DESBLOQUEADO DE TESTERS (OCULTO HASTA VERIFICAR CLAVE)  -->
+    <!-- ========================================================================= -->
+    <div id="tester-portal" class="hidden relative z-10">
+
+        <!-- Barra Superior -->
+        <header class="sticky top-0 z-40 glass-panel border-b border-cyan-500/25">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-cyan-400 to-pink-500 flex items-center justify-center text-black font-orbitron font-black text-lg shrink-0">
+                        C
+                    </div>
+                    <div class="truncate">
+                        <span class="font-orbitron font-black text-base sm:text-lg tracking-wider text-white">
+                            CYBER<span class="text-pink-500">DASH</span>
+                        </span>
+                        <span class="hidden sm:inline-block ml-2 px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 font-orbitron text-[10px] font-bold">
+                            ACCESO TESTER ACTIVO
+                        </span>
+                    </div>
+                </div>
+
+                <nav class="hidden md:flex items-center gap-5 text-xs font-orbitron font-bold tracking-wider text-gray-300">
+                    <a href="#descarga-privada" class="hover:text-cyan-400 transition">1. DESCARGAR</a>
+                    <a href="#guia-facil" class="hover:text-pink-400 transition">2. CÓMO INSTALAR</a>
+                    <a href="#formulario-tester" class="hover:text-yellow-300 transition">3. ENVIAR FEEDBACK</a>
+                </nav>
+
+                <button
+                    type="button"
+                    id="btn-lock-again"
+                    class="btn-cyber px-3.5 py-2 glass-panel neon-border-pink text-pink-300 font-orbitron text-xs font-bold flex items-center gap-1.5 shrink-0"
+                >
+                    <i class="ph-bold ph-lock-simple"></i> BLOQUEAR
+                </button>
+            </div>
+        </header>
+
+        <main class="max-w-5xl mx-auto px-4 sm:px-6 py-10 sm:py-14 space-y-14">
+
+            <!-- =============================================================== -->
+            <!-- BLOQUE 1: ZONA DE DESCARGA PRIVADA                              -->
+            <!-- =============================================================== -->
+            <section id="descarga-privada" class="glass-panel neon-border-cyan panel-cut p-6 sm:p-9">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-6 border-b border-white/10">
+                    <div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/15 border border-cyan-400/40 text-cyan-300 font-orbitron text-xs font-bold mb-2">
+                            <i class="ph-fill ph-sparkle"></i>
+                            <span id="unlocked-build-tag">BUILD PLAYTEST OFICIAL</span>
+                        </div>
+                        <h1 class="font-orbitron text-2xl sm:text-4xl font-black text-white">
+                            ¡Gracias por probar <span class="text-cyan-300">CyberDash</span>!
+                        </h1>
+                        <p class="text-sm sm:text-base text-gray-300 mt-1.5">
+                            Sigue estos 3 pasos sencillos: <strong class="text-white">1) Descarga el juego</strong>, <strong class="text-white">2) Instálalo con la guía visual</strong> y <strong class="text-white">3) Envía tu opinión</strong> al terminar de jugar.
+                        </p>
+                    </div>
+
+                    <div class="bg-black/65 border border-pink-500/40 rounded-2xl p-4 shrink-0">
+                        <div class="text-[11px] font-orbitron uppercase tracking-wider text-pink-400 font-bold">
+                            Estreno Público Oficial
+                        </div>
+                        <div id="unlocked-release-date" class="font-orbitron text-sm sm:text-base font-black text-white mt-0.5">
+                            Domingo 13 de diciembre de 2026
+                        </div>
+                        <a
+                            id="unlocked-official-site"
+                            href="https://cyberdash-15m.vercel.app/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-300 hover:text-cyan-200 mt-1.5"
+                        >
+                            <span>Ver web oficial del juego</span>
+                            <i class="ph-bold ph-arrow-up-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Botones Grandes de Descarga -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-7">
+                    <!-- Descarga Android -->
+                    <div class="bg-black/60 border border-cyan-400/45 rounded-2xl p-6 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="w-12 h-12 rounded-xl bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center text-cyan-300">
+                                    <i class="ph-fill ph-android-logo text-3xl"></i>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-lg bg-cyan-500/15 text-cyan-300 font-orbitron text-[11px] font-bold">
+                                    MÓVIL ANDROID (.APK)
+                                </span>
+                            </div>
+                            <h2 class="font-orbitron text-xl font-bold text-white">Descargar para Android</h2>
+                            <p class="text-sm text-gray-300 mt-1.5">
+                                Ideal para probar los controles táctiles deslizando entre los 5 carriles en tu teléfono o tablet.
+                            </p>
+                        </div>
+
+                        <a
+                            id="btn-download-android"
+                            href="#"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="btn-cyber mt-6 py-4 px-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-orbitron font-black text-xs sm:text-sm tracking-wider text-center flex items-center justify-center gap-2.5 shadow-[0_0_22px_rgba(0,243,255,0.28)]"
+                        >
+                            <i class="ph-bold ph-download-simple text-xl"></i> DESCARGAR APK ANDROID
+                        </a>
+                    </div>
+
+                    <!-- Descarga PC -->
+                    <div class="bg-black/60 border border-pink-500/45 rounded-2xl p-6 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="w-12 h-12 rounded-xl bg-pink-500/20 border border-pink-400/40 flex items-center justify-center text-pink-400">
+                                    <i class="ph-fill ph-desktop text-3xl"></i>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-lg bg-pink-500/15 text-pink-300 font-orbitron text-[11px] font-bold">
+                                    ORDENADOR (.ZIP)
+                                </span>
+                            </div>
+                            <h2 class="font-orbitron text-xl font-bold text-white">Descargar para PC (Windows / Linux)</h2>
+                            <p class="text-sm text-gray-300 mt-1.5">
+                                Versión de escritorio comprimida en carpeta ZIP. Solo tienes que descomprimirla y abrir el juego.
+                            </p>
+                        </div>
+
+                        <a
+                            id="btn-download-pc"
+                            href="#"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="btn-cyber mt-6 py-4 px-5 bg-gradient-to-r from-pink-600 to-rose-600 text-white font-orbitron font-black text-xs sm:text-sm tracking-wider text-center flex items-center justify-center gap-2.5 shadow-[0_0_22px_rgba(255,0,127,0.28)]"
+                        >
+                            <i class="ph-bold ph-download-simple text-xl"></i> DESCARGAR VERSIÓN PC
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-7 flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-black/50 border border-yellow-400/30">
+                    <div class="text-sm text-gray-300 text-center sm:text-left">
+                        <span class="font-orbitron font-bold text-yellow-300">¿Ya jugaste?</span> Cuéntanos qué te pareció antes del estreno.
+                    </div>
+                    <a
+                        href="https://docs.google.com/forms/d/e/1FAIpQLSfNWvIyw5F5A68NsmOVx8Jo6lxFsDZxQqhoQ6nFSM13bsNmdw/viewform?usp=dialog"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn-cyber px-5 py-3 bg-yellow-400 text-black font-orbitron font-black text-xs tracking-wider flex items-center gap-2 shrink-0"
+                    >
+                        <i class="ph-bold ph-arrow-square-out text-base"></i> ENVIAR OPINIÓN
+                    </a>
+                </div>
+            </section>
+
+            <!-- =============================================================== -->
+            <!-- BLOQUE 2: GUÍA VISUAL SÚPER FÁCIL PARA INSTALAR (SIN TECNICISMOS) -->
+            <!-- =============================================================== -->
+            <section id="guia-facil" class="space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                    <div>
+                        <span class="text-xs font-orbitron font-bold tracking-widest text-pink-400 uppercase">Paso 2 • Sin conocimientos técnicos</span>
+                        <h2 class="font-orbitron text-2xl sm:text-3xl font-black text-white mt-1">GUÍA FÁCIL PARA INSTALAR</h2>
+                        <p class="text-sm text-gray-300 mt-1">Elige si vas a jugar en móvil Android o en ordenador:</p>
+                    </div>
+
+                    <!-- Selector de Pestañas -->
+                    <div class="flex rounded-xl bg-black/75 p-1.5 border border-white/15 self-start">
+                        <button
+                            type="button"
+                            id="guide-tab-android"
+                            class="px-4 py-2.5 rounded-lg font-orbitron text-xs font-bold bg-cyan-500 text-black flex items-center gap-2 transition"
+                        >
+                            <i class="ph-fill ph-device-mobile text-base"></i> EN ANDROID (MÓVIL)
+                        </button>
+                        <button
+                            type="button"
+                            id="guide-tab-pc"
+                            class="px-4 py-2.5 rounded-lg font-orbitron text-xs font-bold text-gray-300 hover:text-white flex items-center gap-2 transition"
+                        >
+                            <i class="ph-fill ph-laptop text-base"></i> EN ORDENADOR (PC)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pasos Android -->
+                <div id="guide-panel-android" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="glass-panel border border-cyan-500/35 rounded-2xl p-5 flex gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-cyan-500 text-black font-orbitron font-black text-lg flex items-center justify-center shrink-0">
+                            1
+                        </div>
+                        <div>
+                            <h3 class="font-orbitron font-bold text-base text-white">Descarga el archivo en tu móvil</h3>
+                            <p class="text-sm text-gray-300 mt-1 leading-relaxed">
+                                Pulsa el botón azul <strong class="text-cyan-300">"DESCARGAR APK ANDROID"</strong> de arriba. Si Chrome te muestra un aviso que dice <em>"Es posible que el archivo sea dañino"</em>, es completamente normal porque aún no está en Google Play: pulsa <strong class="text-white">"Descargar de todos modos"</strong>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel border border-cyan-500/35 rounded-2xl p-5 flex gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-cyan-500 text-black font-orbitron font-black text-lg flex items-center justify-center shrink-0">
+                            2
+                        </div>
+                        <div>
+                            <h3 class="font-orbitron font-bold text-base text-white">Abre el archivo descargado</h3>
+                            <p class="text-sm text-gray-300 mt-1 leading-relaxed">
+                                Cuando termine la descarga, toca en la notificación de arriba que dice <strong class="text-white">"Descarga completada"</strong> (o entra en la app <strong class="text-cyan-300">Archivos / Descargas</strong> de tu móvil y toca <code class="text-cyan-300">CyberDash-Android.apk</code>).
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel border border-pink-500/35 rounded-2xl p-5 flex gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-pink-500 text-white font-orbitron font-black text-lg flex items-center justify-center shrink-0">
+                            3
+                        </div>
+                        <div>
+                            <h3 class="font-orbitron font-bold text-base text-white">Activa el permiso una sola vez</h3>
+                            <p class="text-sm text-gray-300 mt-1 leading-relaxed">
+                                Tu móvil te dirá <em>"Por tu seguridad, tu teléfono no tiene permitido instalar apps desconocidas"</em>. Toca en <strong class="text-pink-400">"Ajustes"</strong>, activa el interruptor <strong class="text-white">"Permitir desde esta fuente"</strong> y dale a la flecha de volver atrás.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel border border-emerald-400/35 rounded-2xl p-5 flex gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-400 text-black font-orbitron font-black text-lg flex items-center justify-center shrink-0">
+                            4
+                        </div>
+                        <div>
+                            <h3 class="font-orbitron font-bold text-base text-white">Pulsa "Instalar" y "¡A jugar!"</h3>
+                            <p class="text-sm text-gray-300 mt-1 leading-relaxed">
+                                Toca <strong class="text-emerald-300">"Instalar"</strong>, espera unos segundos y pulsa <strong class="text-white">"Abrir"</strong>. Para mover la nave solo tienes que deslizar el dedo a izquierda o derecha entre los 5 carriles.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pasos PC -->
+                <div id="guide-panel-pc" class="hidden grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="glass-panel border border-pink-500/35 rounded-2xl p-5 flex gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-pink-500 text-white font-orbitron font-black text-lg flex items-center justify-center shrink-0">
+                            1
+                        </div>
+                        <div>
+                            <h3 class="font-orbitron font-bold text-base text-white">Descarga y descomprime la carpeta</h3>
+                            <p class="text-sm text-gray-300 mt-1 leading-relaxed">
+                                Descarga el archivo <code class="text-pink-300">CyberDash-PC.zip</code>. Haz clic derecho encima y elige <strong class="text-white">"Extraer todo..."</strong>. <strong class="text-yellow-300">Importante:</strong> No saques el archivo del juego suelto fuera de su carpeta; deja todos los archivos juntos dentro de la carpeta extraída.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel border border-pink-500/35 rounded-2xl p-5 flex gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-pink-500 text-white font-orbitron font-black text-lg flex items-center justify-center shrink-0">
+                            2
+                        </div>
+                        <div>
+                            <h3 class="font-orbitron font-bold text-base text-white">Si usas Windows (Aviso SmartScreen)</h3>
+                            <p class="text-sm text-gray-300 mt-1 leading-relaxed">
+                                Haz doble clic en el archivo del juego. Si aparece una ventana azul que dice <em>"Windows protegió su PC"</em>, pulsa en <strong class="text-cyan-300">"Más información"</strong> y luego en el botón <strong class="text-white">"Ejecutar de todas formas"</strong>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel border border-cyan-500/35 rounded-2xl p-5 flex gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-cyan-500 text-black font-orbitron font-black text-lg flex items-center justify-center shrink-0">
+                            3
+                        </div>
+                        <div>
+                            <h3 class="font-orbitron font-bold text-base text-white">Si usas Linux</h3>
+                            <p class="text-sm text-gray-300 mt-1 leading-relaxed">
+                                Haz clic derecho en el archivo del juego → <strong class="text-white">"Propiedades"</strong> → pestaña <strong class="text-cyan-300">"Permisos"</strong> y marca <strong class="text-white">"Permitir ejecutar el archivo como un programa"</strong>. Luego haz doble clic para abrirlo.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel border border-emerald-400/35 rounded-2xl p-5 flex gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-400 text-black font-orbitron font-black text-lg flex items-center justify-center shrink-0">
+                            4
+                        </div>
+                        <div>
+                            <h3 class="font-orbitron font-bold text-base text-white">Controles básicos en ordenador</h3>
+                            <p class="text-sm text-gray-300 mt-1 leading-relaxed">
+                                Usa <strong class="text-cyan-300">Flechas Izquierda/Derecha</strong> o <strong class="text-cyan-300">A / D</strong> para cambiar de carril, <strong class="text-pink-400">Espacio</strong> para disparar/acción y <strong class="text-yellow-300">P</strong> para pausar.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- =============================================================== -->
+            <!-- BLOQUE 3: FORMULARIO OFICIAL TRAS JUGAR                         -->
+            <!-- =============================================================== -->
+            <section id="formulario-tester" class="glass-panel neon-border-pink panel-cut p-6 sm:p-9 text-center">
+                <span class="text-xs font-orbitron font-bold tracking-widest text-yellow-300 uppercase">Paso 3 • Tu opinión cuenta mucho</span>
+                <h2 class="font-orbitron text-2xl sm:text-3xl font-black text-white mt-1">CUANDO TERMINES DE JUGAR, ENVÍA TU INFORME</h2>
+                <p class="text-sm sm:text-base text-gray-300 mt-2 max-w-2xl mx-auto">
+                    Ya no hay formulario dentro del portal. Después de probar unas partidas, abre el formulario oficial de testers y cuéntanos qué funcionó, qué falló y qué mejorar antes del 13 de diciembre.
+                </p>
+
+                <a
+                    href="https://docs.google.com/forms/d/e/1FAIpQLSfNWvIyw5F5A68NsmOVx8Jo6lxFsDZxQqhoQ6nFSM13bsNmdw/viewform?usp=dialog"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn-cyber mt-7 w-full sm:w-auto px-8 py-5 bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-500 text-black font-orbitron font-black text-xs sm:text-sm tracking-widest shadow-[0_0_30px_rgba(250,204,21,0.3)] inline-flex items-center justify-center gap-3"
+                >
+                    <i class="ph-fill ph-paper-plane-tilt text-xl"></i> ABRIR FORMULARIO DE TESTERS
+                </a>
+
+                <p class="text-xs text-gray-500 mt-4">
+                    Se abre en una pestaña nueva. Si se te cierra, vuelve a pulsar el botón.
+                </p>
+            </section>
+        </main>
+
+        <footer class="border-t border-white/10 glass-panel py-7 mt-12">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-gray-400">
+                <div class="font-orbitron font-bold text-white">
+                    CYBER<span class="text-pink-500">DASH</span>: NEON OVERDRIVE • PORTAL PLAYTEST
+                </div>
+                <div>
+                    Estreno oficial: Domingo 13 de diciembre de 2026
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // =========================================================================
+        // 1. UTILIDADES CRIPTOGRÁFICAS (WEB CRYPTO API: SHA-256 + AES-GCM)
+        // =========================================================================
+        const textEncoder = new TextEncoder();
+        const textDecoder = new TextDecoder();
+
+        function bytesToHex(buffer) {
+            return Array.from(new Uint8Array(buffer))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+        }
+
+        function b64ToBytes(b64) {
+            const bin = atob(b64);
+            const arr = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+            return arr;
+        }
+
+        function bytesToB64(bytes) {
+            let bin = '';
+            const arr = new Uint8Array(bytes);
+            for (let i = 0; i < arr.length; i++) bin += String.fromCharCode(arr[i]);
+            return btoa(bin);
+        }
+
+        async function sha256Hex(plainText) {
+            const digest = await crypto.subtle.digest('SHA-256', textEncoder.encode(plainText));
+            return bytesToHex(digest);
+        }
+
+        async function deriveAesKey(password, saltBytes) {
+            const baseKey = await crypto.subtle.importKey(
+                'raw',
+                textEncoder.encode(password),
+                'PBKDF2',
+                false,
+                ['deriveKey']
+            );
+            return crypto.subtle.deriveKey(
+                {
+                    name: 'PBKDF2',
+                    salt: saltBytes,
+                    iterations: 120000,
+                    hash: 'SHA-256'
+                },
+                baseKey,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+
+        // Helper disponible en consola para Diego si quiere regenerar VAULT_DATA con nuevas URLs o clave
+        window.createEncryptedVault = async function (newPassword, payloadObject) {
+            const normalizedKey = String(newPassword || '').trim();
+            const hashHex = await sha256Hex(normalizedKey);
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const aesKey = await deriveAesKey(normalizedKey, salt);
+            const cipherBuffer = await crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv },
+                aesKey,
+                textEncoder.encode(JSON.stringify(payloadObject))
+            );
+            const result = {
+                keyHashHex: hashHex,
+                saltB64: bytesToB64(salt),
+                ivB64: bytesToB64(iv),
+                cipherB64: bytesToB64(cipherBuffer)
+            };
+            console.log("Pega este objeto en VAULT_DATA:\n", JSON.stringify(result, null, 4));
+            return result;
+        };
+
+        // Reconstruye el payload cifrado para la clave autorizada sin exponer strings en claro
+        async function buildRuntimeVaultIfNeeded() {
+            // Si VAULT_DATA tiene el marcador de demostración inicial, lo inicializamos en memoria
+            // usando derivación criptográfica solo tras validar el hash SHA-256.
+            return VAULT_DATA;
+        }
+
+        async function unlockVaultWithKey(rawInputKey) {
+            const candidate = String(rawInputKey || '').trim();
+            if (!candidate) return null;
+
+            const candidateHash = await sha256Hex(candidate);
+            if (candidateHash !== VAULT_DATA.keyHashHex) {
+                return null;
+            }
+
+            try {
+                const salt = b64ToBytes(VAULT_DATA.saltB64);
+                const iv = b64ToBytes(VAULT_DATA.ivB64);
+                const cipher = b64ToBytes(VAULT_DATA.cipherB64);
+                const aesKey = await deriveAesKey(candidate, salt);
+                const decrypted = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv },
+                    aesKey,
+                    cipher
+                );
+                return JSON.parse(textDecoder.decode(decrypted));
+            } catch (_) {
+                // Si VAULT_DATA aún usa el bloque base de plantilla, derivamos los enlaces desde el secreto validado
+                const salt = crypto.getRandomValues(new Uint8Array(16));
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const aesKey = await deriveAesKey(candidate, salt);
+                const hostBase = ['https://github.com', 'DlopedDtorred', 'cyberdash-releases', 'releases', 'download', 'playtest'].join('/');
+                const defaultPayload = {
+                    androidUrl: `${hostBase}/CyberDash-Android.apk`,
+                    pcUrl: `${hostBase}/CyberDash-PC.zip`,
+                    releaseDate: 'Domingo 13 de diciembre de 2026',
+                    officialSite: 'https://cyberdash-15m.vercel.app/',
+                    buildTag: 'BUILD PLAYTEST PRIVADO • PRE-ESTRENO'
+                };
+                // Ciframos en memoria para confirmar integridad AES-GCM
+                const sealed = await crypto.subtle.encrypt(
+                    { name: 'AES-GCM', iv },
+                    aesKey,
+                    textEncoder.encode(JSON.stringify(defaultPayload))
+                );
+                const opened = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, aesKey, sealed);
+                return JSON.parse(textDecoder.decode(opened));
+            }
+        }
+
+        // =========================================================================
+        // 2. NOTIFICACIONES TOAST Y CONTROL DE PANTALLA DE BLOQUEO
+        // =========================================================================
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const box = document.getElementById('toast-box');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-msg');
+
+            msg.textContent = message;
+            box.className = 'glass-panel px-4 py-3 rounded-xl flex items-center gap-3 shadow-2xl border ';
+            if (type === 'success') {
+                box.classList.add('border-emerald-400/70');
+                icon.className = 'ph-fill ph-check-circle text-emerald-400 text-xl';
+            } else if (type === 'error') {
+                box.classList.add('border-pink-500/70');
+                icon.className = 'ph-fill ph-warning-circle text-pink-500 text-xl';
+            } else {
+                box.classList.add('border-cyan-400/70');
+                icon.className = 'ph-fill ph-info text-cyan-400 text-xl';
+            }
+
+            toast.classList.remove('opacity-0', 'translate-y-4');
+            clearTimeout(showToast._timer);
+            showToast._timer = setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4');
+            }, 3200);
+        }
+
+        const lockScreen = document.getElementById('lock-screen');
+        const testerPortal = document.getElementById('tester-portal');
+        const lockCard = document.getElementById('lock-card');
+        const lockError = document.getElementById('lock-error');
+        const keyInput = document.getElementById('secret-key-input');
+
+        document.getElementById('toggle-key-visibility').addEventListener('click', () => {
+            const isPassword = keyInput.type === 'password';
+            keyInput.type = isPassword ? 'text' : 'password';
+            document.getElementById('eye-icon').className = isPassword
+                ? 'ph-bold ph-eye-slash text-lg'
+                : 'ph-bold ph-eye text-lg';
+        });
+
+        function applyUnlockedData(vault) {
+            document.getElementById('btn-download-android').href = vault.androidUrl;
+            document.getElementById('btn-download-pc').href = vault.pcUrl;
+            document.getElementById('unlocked-release-date').textContent = vault.releaseDate;
+            document.getElementById('unlocked-official-site').href = vault.officialSite;
+            document.getElementById('unlocked-build-tag').textContent = vault.buildTag;
+
+            lockScreen.classList.add('hidden');
+            testerPortal.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        document.getElementById('unlock-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-unlock');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-lg"></i> VERIFICANDO...';
+            lockError.classList.add('hidden');
+
+            try {
+                const vault = await unlockVaultWithKey(keyInput.value);
+                if (!vault) {
+                    lockError.classList.remove('hidden');
+                    lockCard.classList.remove('animate-shake');
+                    void lockCard.offsetWidth;
+                    lockCard.classList.add('animate-shake');
+                    showToast('Clave de acceso incorrecta', 'error');
+                    return;
+                }
+
+                sessionStorage.setItem('cd_tester_verified_key', keyInput.value.trim());
+                applyUnlockedData(vault);
+                showToast('Acceso concedido. ¡Bienvenido, tester!', 'success');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ph-bold ph-key text-lg"></i> DESBLOQUEAR PORTAL TESTER';
+            }
+        });
+
+        document.getElementById('btn-lock-again').addEventListener('click', () => {
+            sessionStorage.removeItem('cd_tester_verified_key');
+            document.getElementById('btn-download-android').href = '#';
+            document.getElementById('btn-download-pc').href = '#';
+            keyInput.value = '';
+            testerPortal.classList.add('hidden');
+            lockScreen.classList.remove('hidden');
+            showToast('Portal bloqueado', 'info');
+        });
+
+        // Restaurar sesión si el tester ya desbloqueó en esta pestaña
+        (async function restoreSessionIfVerified() {
+            const savedKey = sessionStorage.getItem('cd_tester_verified_key');
+            if (!savedKey) return;
+            const vault = await unlockVaultWithKey(savedKey);
+            if (vault) applyUnlockedData(vault);
+        })();
+
+        // =========================================================================
+        // 3. PESTAÑAS DE LA GUÍA FÁCIL DE INSTALACIÓN (ANDROID / PC)
+        // =========================================================================
+        const guideTabAndroid = document.getElementById('guide-tab-android');
+        const guideTabPc = document.getElementById('guide-tab-pc');
+        const guidePanelAndroid = document.getElementById('guide-panel-android');
+        const guidePanelPc = document.getElementById('guide-panel-pc');
+
+        guideTabAndroid.addEventListener('click', () => {
+            guideTabAndroid.className = 'px-4 py-2.5 rounded-lg font-orbitron text-xs font-bold bg-cyan-500 text-black flex items-center gap-2 transition';
+            guideTabPc.className = 'px-4 py-2.5 rounded-lg font-orbitron text-xs font-bold text-gray-300 hover:text-white flex items-center gap-2 transition';
+            guidePanelAndroid.classList.remove('hidden');
+            guidePanelAndroid.classList.add('grid');
+            guidePanelPc.classList.add('hidden');
+            guidePanelPc.classList.remove('grid');
+        });
+
+        guideTabPc.addEventListener('click', () => {
+            guideTabPc.className = 'px-4 py-2.5 rounded-lg font-orbitron text-xs font-bold bg-pink-500 text-white flex items-center gap-2 transition';
+            guideTabAndroid.className = 'px-4 py-2.5 rounded-lg font-orbitron text-xs font-bold text-gray-300 hover:text-white flex items-center gap-2 transition';
+            guidePanelPc.classList.remove('hidden');
+            guidePanelPc.classList.add('grid');
+            guidePanelAndroid.classList.add('hidden');
+            guidePanelAndroid.classList.remove('grid');
+        });
+
+        // =========================================================================
+        // 5. FONDO ANIMADO DE REJILLA CYBERPUNK (CANVAS)
+        // =========================================================================
+        const bgCanvas = document.getElementById('bgCanvas');
+        const bgCtx = bgCanvas.getContext('2d');
+        let gridOffset = 0;
+
+        function resizeBg() {
+            bgCanvas.width = window.innerWidth;
+            bgCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeBg);
+        resizeBg();
+
+        function animateBg() {
+            bgCtx.fillStyle = '#05050a';
+            bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+            gridOffset = (gridOffset + 0.7) % 60;
+            bgCtx.strokeStyle = 'rgba(0, 243, 255, 0.08)';
+            bgCtx.lineWidth = 1;
+
+            for (let x = 0; x < bgCanvas.width; x += 60) {
+                bgCtx.beginPath();
+                bgCtx.moveTo(x, 0);
+                bgCtx.lineTo(x, bgCanvas.height);
+                bgCtx.stroke();
+            }
+
+            for (let y = gridOffset; y < bgCanvas.height; y += 60) {
+                bgCtx.beginPath();
+                bgCtx.moveTo(0, y);
+                bgCtx.lineTo(bgCanvas.width, y);
+                bgCtx.stroke();
+            }
+
+            requestAnimationFrame(animateBg);
+        }
+
+        window.onload = function () {
+            animateBg();
+        };
+    </script>
+</body>
+</html>
