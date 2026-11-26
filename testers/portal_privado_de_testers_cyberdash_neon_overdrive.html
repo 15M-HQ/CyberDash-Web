@@ -116,6 +116,26 @@
             ivB64: "65YEdKHQWc5VcT3R",
             cipherB64: "2jsZXV4SWk/vYYRYfFRniPl+qVs/b84WF4soZSL7mDPYLl2vzoEF/yaPgThYCb5OXjQFIBvLlEhcl7ktNeL5/X+V2uoCRMx5li3d6RYImi9Gcew2eM5LDzFTg9ZUzzYWfbaN5jfvAQBH2cgspKF/8KAglva9oi4p8mtOZcU9AJZHS9mKV/Scl251Ufy9d/t+gG9uw+I4qU4gHSy80ZqefpHO+8qjsHJMhZbjWMShWiHmDYdnSAxgKj6TTMGW5VQJLXqWEb3YBNEe9xLUyTaun0mf0D7Z/a+qZFFtFx4n68Tt2HOt8uT6J5h1soYiamsyL/4Elm/m3hlmKQG4v0wk0yzWEjFNTT17jUUSvNkoDbq7O7QC8mUQrR7O5vZ7TPpXFIA4qfzJ0PLQeWJXhsdCVeR+a4NxYrlJnYJPjM6/6H3TNjJyFH1qCUzRxsBiqiM+yYnUR42xXIFc64neRiCzECvKa5K1XpfUziEnLE8Oex9hK3tNmqYgBvUPhzbvp6T/RXhd7hIo"
         };
+
+        // Descargas privadas: la Edge Function valida la clave y devuelve URLs firmadas.
+        const TESTER_DOWNLOAD_FUNCTION =
+            'https://vcebgixksktaucwfxovg.supabase.co/functions/v1/tester-download';
+        const PORTAL_PUBLISHABLE_KEY =
+            'sb_publishable_ptMjHmn998NiN8gGEb7W6A_KZwktW3R';
+
+        async function fetchSignedDownloadUrls(password) {
+            const response = await fetch(TESTER_DOWNLOAD_FUNCTION, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${PORTAL_PUBLISHABLE_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ password })
+            });
+            if (!response.ok) throw new Error('No se pudieron generar las descargas');
+            const data = await response.json();
+            return data.urls;
+        }
     </script>
 
     <!-- Fondo Animado Cyberpunk en Canvas -->
@@ -317,24 +337,35 @@
                                     <i class="ph-fill ph-desktop text-3xl"></i>
                                 </div>
                                 <span class="px-2.5 py-1 rounded-lg bg-pink-500/15 text-pink-300 font-orbitron text-[11px] font-bold">
-                                    ORDENADOR (.ZIP)
+                                    WINDOWS / LINUX (.ZIP)
                                 </span>
                             </div>
                             <h2 class="font-orbitron text-xl font-bold text-white">Descargar para PC (Windows / Linux)</h2>
                             <p class="text-sm text-gray-300 mt-1.5">
-                                Versión de escritorio comprimida en carpeta ZIP. Solo tienes que descomprimirla y abrir el juego.
+                                Elige tu sistema. Cada ZIP trae el juego y sus instrucciones; solo descomprime y abre.
                             </p>
                         </div>
 
-                        <a
-                            id="btn-download-pc"
-                            href="#"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="btn-cyber mt-6 py-4 px-5 bg-gradient-to-r from-pink-600 to-rose-600 text-white font-orbitron font-black text-xs sm:text-sm tracking-wider text-center flex items-center justify-center gap-2.5 shadow-[0_0_22px_rgba(255,0,127,0.28)]"
-                        >
-                            <i class="ph-bold ph-download-simple text-xl"></i> DESCARGAR VERSIÓN PC
-                        </a>
+                        <div class="mt-6 grid gap-2.5">
+                            <a
+                                id="btn-download-windows"
+                                href="#"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="btn-cyber py-3.5 px-5 bg-gradient-to-r from-pink-600 to-rose-600 text-white font-orbitron font-black text-xs tracking-wider text-center flex items-center justify-center gap-2.5 shadow-[0_0_22px_rgba(255,0,127,0.28)]"
+                            >
+                                <i class="ph-bold ph-download-simple text-lg"></i> DESCARGAR WINDOWS
+                            </a>
+                            <a
+                                id="btn-download-linux"
+                                href="#"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="btn-cyber py-3.5 px-5 border border-pink-500/50 text-pink-300 font-orbitron font-black text-xs tracking-wider text-center flex items-center justify-center gap-2.5 hover:bg-pink-500/10 transition"
+                            >
+                                <i class="ph-bold ph-download-simple text-lg"></i> DESCARGAR LINUX
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -693,9 +724,10 @@
                 : 'ph-bold ph-eye text-lg';
         });
 
-        function applyUnlockedData(vault) {
-            document.getElementById('btn-download-android').href = vault.androidUrl;
-            document.getElementById('btn-download-pc').href = vault.pcUrl;
+        async function applyUnlockedData(vault, urls) {
+            document.getElementById('btn-download-android').href = urls.android;
+            document.getElementById('btn-download-windows').href = urls.windows;
+            document.getElementById('btn-download-linux').href = urls.linux;
             document.getElementById('unlocked-release-date').textContent = vault.releaseDate;
             document.getElementById('unlocked-official-site').href = vault.officialSite;
             document.getElementById('unlocked-build-tag').textContent = vault.buildTag;
@@ -713,7 +745,8 @@
             lockError.classList.add('hidden');
 
             try {
-                const vault = await unlockVaultWithKey(keyInput.value);
+                const password = keyInput.value.trim();
+                const vault = await unlockVaultWithKey(password);
                 if (!vault) {
                     lockError.classList.remove('hidden');
                     lockCard.classList.remove('animate-shake');
@@ -723,9 +756,15 @@
                     return;
                 }
 
-                sessionStorage.setItem('cd_tester_verified_key', keyInput.value.trim());
-                applyUnlockedData(vault);
+                // Los enlaces se firman en el servidor; nunca se guardan en el HTML.
+                const urls = await fetchSignedDownloadUrls(password);
+                sessionStorage.setItem('cd_tester_verified_key', password);
+                await applyUnlockedData(vault, urls);
                 showToast('Acceso concedido. ¡Bienvenido, tester!', 'success');
+            } catch (err) {
+                lockError.textContent = 'No se pudieron generar las descargas. Inténtalo de nuevo.';
+                lockError.classList.remove('hidden');
+                showToast('No se pudieron generar las descargas', 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="ph-bold ph-key text-lg"></i> DESBLOQUEAR PORTAL TESTER';
@@ -735,7 +774,8 @@
         document.getElementById('btn-lock-again').addEventListener('click', () => {
             sessionStorage.removeItem('cd_tester_verified_key');
             document.getElementById('btn-download-android').href = '#';
-            document.getElementById('btn-download-pc').href = '#';
+            document.getElementById('btn-download-windows').href = '#';
+            document.getElementById('btn-download-linux').href = '#';
             keyInput.value = '';
             testerPortal.classList.add('hidden');
             lockScreen.classList.remove('hidden');
@@ -746,8 +786,14 @@
         (async function restoreSessionIfVerified() {
             const savedKey = sessionStorage.getItem('cd_tester_verified_key');
             if (!savedKey) return;
-            const vault = await unlockVaultWithKey(savedKey);
-            if (vault) applyUnlockedData(vault);
+            try {
+                const vault = await unlockVaultWithKey(savedKey);
+                if (!vault) return;
+                const urls = await fetchSignedDownloadUrls(savedKey);
+                await applyUnlockedData(vault, urls);
+            } catch (_) {
+                sessionStorage.removeItem('cd_tester_verified_key');
+            }
         })();
 
         // =========================================================================
